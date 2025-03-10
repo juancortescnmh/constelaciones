@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <!-- iOS Fullscreen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta
+    name="viewport"
+    content="width=device-width, maximum-scale=1.0, user-scalable=no"
+  />
+  <title>Constelaciones AR</title>
+
+  <!-- Tipografía Avenir (con fallback a sans-serif) -->
+  <style>
+    @font-face {
+      font-family: 'Avenir';
+      /* Si tienes acceso a un archivo local de Avenir, podrías enlazarlo aquí.
+         De lo contrario, el dispositivo usará Avenir si lo tiene instalado,
+         y sino caerá a un sans-serif de sistema. */
+      src: local('Avenir'), local('AvenirLTStd-Book'); 
+    }
+  </style>
+
+  <style>
+    /* ============================
+       ANIMACIONES GLOBALES
+    ============================ */
+    @keyframes cosmicGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+    @keyframes starAppear {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes panelFadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================
+       RESETEO Y ESTILO BASE
+    ============================ */
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Avenir', sans-serif;
+      color: #fff;
+      touch-action: none;
+      height: 100vh;
+    }
+
+    /* ============================
+       VIDEO / CÁMARA
+    ============================ */
+    #video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    /* ============================
+       FONDO CÓSMICO
+    ============================ */
+    #starfield {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      background: linear-gradient(120deg, #01010f, #090921, #0f0c29);
+      background-size: 200% 200%;
+      animation: cosmicGradient 25s ease infinite;
+      opacity: 0.7;
+    }
+
+    /* ============================
+       CANVAS PARA LÍNEAS
+    ============================ */
+    #skyCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* ============================
+       ESTRELLAS (DOM)
+    ============================ */
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background-color: #fff;
+      box-shadow: 0 0 2px rgba(255,255,255,0.8);
+      pointer-events: none;
+      animation: starAppear 0.5s ease forwards;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 4;
+    }
+    .star.bright {
+      box-shadow: 0 0 12px 2px rgba(255,255,255,0.7);
+      animation: twinkle 2s infinite ease-in-out, starAppear 0.5s ease forwards;
+    }
+
+    /* Nombres de estrellas (víctimas) */
+    .star-name {
+      position: absolute;
+      font-size: 13px;
+      font-weight: 400;
+      color: #fff;
+      pointer-events: none;
+      text-shadow: 0 0 4px #000, 0 0 8px #000;
+      opacity: 0;
+      transform: translate(-50%, -150%);
+      z-index: 4;
+      transition: opacity 0.3s ease;
+      font-family: 'Avenir', sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    /* ============================
+       ESTRELLAS FUGACES
+    ============================ */
+    .shooting-star {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(to right, rgba(255,255,255,0), #fff, rgba(255,255,255,0));
+      transform-origin: left center;
+      pointer-events: none;
+      z-index: 5;
+      box-shadow: 0 0 4px #fff;
+    }
+
+    /* ============================
+       INDICADOR CENTRAL
+    ============================ */
+    .center-reticle {
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px; height: 40px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 20;
+    }
+    .center-reticle::before, .center-reticle::after {
+      content: "";
+      position: absolute;
+      background: rgba(255,255,255,0.3);
+    }
+    .center-reticle::before {
+      width: 2px; height: 100%;
+      left: 50%; transform: translateX(-50%);
+    }
+    .center-reticle::after {
+      width: 100%; height: 2px;
+      top: 50%; transform: translateY(-50%);
+    }
+
+    /* ============================
+       CONTROLES
+    ============================ */
+    #controls {
+      position: fixed;
+      bottom: 20px; left: 0;
+      width: 100%; z-index: 10;
+      display: none; justify-content: center; gap: 10px;
+      animation: panelFadeIn 0.8s ease forwards;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: rgba(13,27,42,0.7);
+      color: #fff;
+      border: 1px solid rgba(100,149,237,0.4);
+      border-radius: 20px;
+      font-size: 14px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      font-family: 'Avenir', sans-serif;
+    }
+    .btn:hover {
+      background: rgba(40,63,83,0.8);
+      cursor: pointer;
+    }
+
+    /* ============================
+       PANEL INFORMACIÓN
+    ============================ */
+    #objectInfo {
+      position: fixed;
+      bottom: 80px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13,27,42,0.7);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      max-width: 80%;
+      text-align: center;
+      z-index: 10;
+      display: none;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(100,149,237,0.4);
+      animation: panelFadeIn 0.8s ease forwards;
+      font-family: 'Avenir', sans-serif;
+    }
+    #objectInfo h3 {
+      margin-bottom: 5px; color: #82b1ff; font-size: 18px;
+      font-weight: 600; letter-spacing: 0.4px;
+    }
+
+    /* ============================
+       PANEL DE INICIO
+    ============================ */
+    #startPanel {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      text-align: center; padding: 20px;
+      z-index: 100;
+      background: linear-gradient(135deg,#01010f,#2a002b);
+      background-size: 400% 400%;
+      animation: cosmicGradient 15s ease infinite;
+    }
+    #startPanel h1 {
+      margin-bottom: 30px; font-size: 28px; color: #fff;
+      text-shadow: 0 2px 10px rgba(100,181,246,0.5), 0 0 10px rgba(255,255,255,0.3);
+      animation: panelFadeIn 1s ease forwards;
+      font-weight: 600;
+      font-family: 'Avenir', sans-serif;
+    }
+    #startPanel p {
+      margin-bottom: 20px; color: #eee; font-size: 16px;
+      animation: panelFadeIn 1s ease forwards;
+      font-family: 'Avenir', sans-serif;
+    }
+    #startBtn {
+      padding: 12px 30px;
+      background: linear-gradient(135deg,#2962ff,#0039cb);
+      color: #fff; border: none; border-radius: 30px;
+      font-size: 18px;
+      box-shadow: 0 4px 15px rgba(41,98,255,0.4);
+      animation: panelFadeIn 1.2s ease forwards;
+      font-family: 'Avenir', sans-serif;
+    }
+    #startBtn:hover {
+      background: linear-gradient(135deg,#4591ff,#1c5cd9);
+      cursor: pointer;
+    }
+
+    /* ============================
+       PANEL DE CALIBRACIÓN
+    ============================ */
+    #calibrationUI {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none; flex-direction: column;
+      justify-content: center; align-items: center;
+      z-index: 50; text-align: center; padding: 20px;
+    }
+    #calibrationUI h2 {
+      margin-bottom: 20px; font-size: 24px;
+      animation: panelFadeIn 0.5s ease forwards;
+      font-weight: 600;
+      font-family: 'Avenir', sans-serif;
+    }
+    #calibrationUI p {
+      margin-bottom: 30px; max-width: 80%;
+      animation: panelFadeIn 0.7s ease forwards; color: #ddd;
+      font-family: 'Avenir', sans-serif;
+    }
+    #calibrationIndicator {
+      width: 200px; height: 200px;
+      border-radius: 50%; border: 2px solid #82b1ff;
+      position: relative; margin-bottom: 40px;
+      animation: panelFadeIn 0.8s ease forwards;
+    }
+    #calibrationDot {
+      width: 20px; height: 20px;
+      background-color: #2962ff; border-radius: 50%;
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%,-50%);
+      box-shadow: 0 0 10px rgba(41,98,255,0.7);
+    }
+    #confirmCalibration {
+      padding: 10px 20px; background: #2962ff;
+      color: #fff; border: none; border-radius: 20px;
+      font-size: 16px; animation: panelFadeIn 1s ease forwards;
+      font-family: 'Avenir', sans-serif;
+    }
+    #confirmCalibration:hover {
+      background: #1c47a8; cursor: pointer;
+    }
+    #calibMsg {
+      margin-top: 10px; color: #ccc; font-size: 13px; transition: 0.3s ease;
+      font-family: 'Avenir', sans-serif;
+    }
+
+    /* ============================
+       DEBUG
+    ============================ */
+    #debug {
+      position: fixed; top: 10px; left: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 5px; border-radius: 5px;
+      font-size: 10px; max-width: 50%;
+      z-index: 100; display: none; white-space: pre;
+      font-family: 'Avenir', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <!-- Cámara -->
+  <video id="video" playsinline muted></video>
+
+  <!-- Fondo cósmico -->
+  <div id="starfield"></div>
+
+  <!-- Canvas para líneas -->
+  <canvas id="skyCanvas"></canvas>
+
+  <!-- Retícula central -->
+  <div class="center-reticle"></div>
+
+  <!-- Controles (Calibrar, Reiniciar) -->
+  <div id="controls">
+    <button id="calibrateBtn" class="btn">Calibrar</button>
+    <button id="resetBtn" class="btn">Reiniciar</button>
+  </div>
+
+  <!-- Panel de información (estrella apuntada) -->
+  <div id="objectInfo">
+    <h3 id="objectName"></h3>
+    <p id="objectDesc"></p>
+  </div>
+
+  <!-- Panel de inicio -->
+  <div id="startPanel">
+    <h1>Constelaciones AR</h1>
+    <p>
+      Otorga permisos de cámara y sensores.<br/>
+      Presiona <strong>Comenzar</strong> <br/>
+      CNMH 2025
+    </p>
+    <button id="startBtn">Comenzar</button>
+  </div>
+
+  <!-- Panel de calibración -->
+  <div id="calibrationUI">
+    <h2>Calibración</h2>
+    <p>
+      Apunta tu teléfono al frente y ajusta la bola azul<br/>
+      en el centro de la pantalla. Luego presiona Confirmar.
+    </p>
+    <div id="calibrationIndicator">
+      <div id="calibrationDot"></div>
+    </div>
+    <button id="confirmCalibration">Confirmar</button>
+    <p id="calibMsg"></p>
+  </div>
+
+  <!-- Debug info -->
+  <div id="debug"></div>
+
+  <script>
+    /******************************************************
+     * VARIABLES DE ESTADO
+     ******************************************************/
+    let appActive = false;
+    let calibrating = false;
+    let stream = null;
+    let showDebug = false;
+
+    let deviceOrientation = { alpha:0, altitude:0, gamma:0 };
+    let calibrationOffset = { alpha:0, altitude:0, gamma:0 };
+
+    const video = document.getElementById("video");
+    const starfield = document.getElementById("starfield");
+    const skyCanvas = document.getElementById("skyCanvas");
+    const ctx = skyCanvas.getContext("2d");
+
+    const startPanel = document.getElementById("startPanel");
+    const startBtn = document.getElementById("startBtn");
+    const controls = document.getElementById("controls");
+    const calibrateBtn = document.getElementById("calibrateBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    const objectInfo = document.getElementById("objectInfo");
+    const objectName = document.getElementById("objectName");
+    const objectDesc = document.getElementById("objectDesc");
+
+    const calibrationUI = document.getElementById("calibrationUI");
+    const calibrationDot = document.getElementById("calibrationDot");
+    const confirmCalibration = document.getElementById("confirmCalibration");
+    const debugEl = document.getElementById("debug");
+    const calibMsg = document.getElementById("calibMsg");
+
+    /******************************************************
+     * LISTA DE VÍCTIMAS DE FALSOS POSITIVOS
+     ******************************************************/
+    const victimNames = [
+      "Saín Álvarez","Jorge Eliécer García Claro","Ariel Jaime Arias","Ramiro Blanco Rubio",
+      "Miguel Ángel Carrascal Toro","Dioselino Durán Pérez","Guillermo Reyes Aponte","Alejandro Chocó Cáceres",
+      "Miguel Ángel Peña Ortega","Luis Antonio Sánchez Guerrero","William Sarabia Jaimes","Deiber Ramírez",
+      "Euclides García Claro","Jair Julio Vega","Diosemiro Chinchilla Contreras","Jhon Jairo Contreras Vera",
+      "Pedro Jesús Bayona Rojas","Gerardo Quintero Jaimes","Luis Carlos Angarita","José Néstor Rodríguez Santana",
+      "Jesús Emilio Navarro Garay","Daniel Suárez Martínez","Jaime Castillo Peña","Diego Alberto Tamayo Garcera",
+      "Carlos Mauricio Nova Vega","Rafael Plata Irene","Álvaro Adolfo Piña Londoño","Álvaro César Olivera Granados",
+      "Andres Abelino Vega","Ángel Miguel Soto","Antonio Carillo","Ariel Enrique Marín Urrutia",
+      "Armando Rafael Morales Pérez","Carlos Alberto Castro Aguirre","Carlos Alberto Pumarejo López Sierra",
+      "Carlos Arturo Cáceres","Carlos Jaime Amarís","Carlos Arturo Montes","Carlos Carmona",
+      "Cristian Camilo Santiago Redondo","David Rubio","Donaldo Antonio Gamero Barrios","Eduard Cáceres Prado",
+      "Evelio Vaca Pérez","Ever Antonio Barrera Jiménez","Francisco Rafael Barraza","Fredy Antonio Naranjo Martínez",
+      "Hector Raúl Arévalo Serrano","Javier Armando Molina","Jesús María Coronel","Joaquín Felipe Contreras Romero",
+      "Joaquín Vergara Cárdenas","José Antonio Mercado Hernández","José Gregorio Vargas","José Ignacio Pacheco Suárez",
+      "José Miguel Palacios","Juan Carlos Galvis Solano","Leiner Guerrero Ayala","Leonardo Enrique Porto Egea",
+      "Luis Alberto Palomino Villar","Luis Eduardo Oñate","Luis Felipe Pavón","Luis Fernando Daza Malo",
+      "Luis Javier Molina Gutiérrez","Manuel Romero Negrete","Mario Alejandro Lozano Villada","Martín Villazón Ochoa",
+      "Nohemí Ester Pacheco Sábata","Rafael Ignacio Puerta Flores","Tania Solano Tristancho","Uriel Evangelista Arias",
+      "Victor Enrique Carpintero Manjares","Wilmar Antonio Serrano Quintero","Alberto de Jesús Aragón Aragón",
+      "Jesús Emilio Márquez Gutiérrez","Jesús Javier Suárez Caro","Isidoro de Jesús Cardona","Isaías Rueda Cardona"
+    ];
+
+    /******************************************************
+     * ESTRELLAS DE FONDO
+     ******************************************************/
+    const BACKGROUND_STAR_COUNT=400;
+    let backgroundStars=[];
+    function createBackgroundStars(){
+      starfield.innerHTML="";
+      backgroundStars=[];
+      for(let i=0; i<BACKGROUND_STAR_COUNT; i++){
+        const az=Math.random()*360;
+        const alt=(Math.asin(2*Math.random()-1)*180)/Math.PI; // -90..+90
+        const starEl=document.createElement("div");
+        starEl.className="star";
+        const size=Math.random()*2+1;
+        starEl.style.width=size+"px";
+        starEl.style.height=size+"px";
+        starEl.style.opacity=(Math.random()*0.7+0.3).toFixed(2);
+        if(Math.random()>0.9) starEl.classList.add("bright");
+        backgroundStars.push({ element:starEl, azimuth:az, altitude:alt });
+        starfield.appendChild(starEl);
+      }
+    }
+
+    /******************************************************
+     * ESTRELLAS DE VÍCTIMAS
+     ******************************************************/
+    let victimStars=[];
+    function createVictimStars(){
+      victimStars=[];
+
+      // Distribución con distancia mínima
+      const placedStars=[];
+      const minDistDeg=10; // separa más las estrellas
+      const attempts=200;
+
+      victimNames.forEach(name=>{
+        let placed=false;
+        for(let i=0;i<attempts;i++){
+          let az=Math.random()*360;
+          let alt=-60+Math.random()*120;
+          let ok=true;
+          for(let st of placedStars){
+            let dAz=az-st.azimuth;
+            let dAlt=alt-st.altitude;
+            let dist=Math.sqrt(dAz*dAz + dAlt*dAlt);
+            if(dist<minDistDeg){
+              ok=false; break;
+            }
+          }
+          if(ok){
+            placedStars.push({ azimuth:az, altitude:alt, name });
+            placed=true;
+            break;
+          }
+        }
+        if(!placed){
+          console.log("No se pudo ubicar:",name);
+        }
+      });
+
+      placedStars.forEach(st=>{
+        const size=2+Math.random()*2;
+        const bright=Math.random()<0.3;
+        victimStars.push({
+          name:st.name,
+          azimuth:st.azimuth,
+          altitude:st.altitude,
+          size:size,
+          bright:bright,
+          connections:[]
+        });
+      });
+
+      computeConnections();
+
+      victimStars.forEach(st=>{
+        const starEl=document.createElement("div");
+        starEl.className="star";
+        starEl.style.width=st.size+"px";
+        starEl.style.height=st.size+"px";
+        if(st.bright) starEl.classList.add("bright");
+
+        const nameEl=document.createElement("div");
+        nameEl.className="star-name";
+        nameEl.textContent=st.name;
+
+        starfield.appendChild(starEl);
+        starfield.appendChild(nameEl);
+
+        st.element=starEl;
+        st.nameTag=nameEl;
+      });
+    }
+
+    // Conecta cada estrella con las 2 más cercanas (umbral menor para constelaciones más pequeñas)
+    function computeConnections(){
+      const threshold=20; // Menor => constelaciones más pequeñas
+      victimStars.forEach((star,i)=>{
+        let distances=[];
+        victimStars.forEach((other,j)=>{
+          if(i===j)return;
+          let dAz=star.azimuth-other.azimuth;
+          let dAlt=star.altitude-other.altitude;
+          let dist=Math.sqrt(dAz*dAz + dAlt*dAlt);
+          distances.push({ index:j, dist });
+        });
+        distances.sort((a,b)=>a.dist-b.dist);
+        star.connections=distances.filter(d=>d.dist<threshold).slice(0,2).map(d=>d.index);
+      });
+    }
+
+    /******************************************************
+     * INICIAR APP
+     ******************************************************/
+    startBtn.addEventListener("click", async ()=>{
+      try{
+        stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }});
+        video.srcObject=stream;
+        await video.play();
+
+        // Permisos iOS
+        try{
+          if(typeof DeviceOrientationEvent!=="undefined" &&
+             typeof DeviceOrientationEvent.requestPermission==="function"){
+            const perm=await DeviceOrientationEvent.requestPermission();
+            if(perm!=="granted") throw new Error("Sensores denegados");
+          }
+          window.addEventListener("deviceorientation", handleOrientation);
+        }catch(e){
+          console.log("Orientación error:",e);
+        }
+
+        startPanel.style.display="none";
+        controls.style.display="flex";
+
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        createBackgroundStars();
+        createVictimStars();
+
+        appActive=true;
+
+        // Estrellas fugaces
+        setInterval(createShootingStar,3000);
+
+        // Calibración inicial
+        startCalibration();
+
+        // Debug con doble click
+        document.addEventListener("dblclick",toggleDebug);
+
+        requestAnimationFrame(updatePositions);
+
+      }catch(err){
+        console.error("Error al iniciar:",err);
+        msgOverlay("Error al iniciar: "+err.message);
+      }
+    });
+
+    /******************************************************
+     * ORIENTACIÓN
+     ******************************************************/
+    function handleOrientation(evt){
+      if(!appActive)return;
+      let alpha;
+      if(typeof evt.webkitCompassHeading==="number"){
+        alpha=evt.webkitCompassHeading;
+      }else{
+        alpha=(360-(evt.alpha||0))%360;
+      }
+      const altitude=(evt.beta||0)-90;
+      const gamma=(evt.gamma||0);
+
+      deviceOrientation.alpha=alpha;
+      deviceOrientation.altitude=altitude;
+      deviceOrientation.gamma=gamma;
+
+      if(calibrating) updateCalibrationUI();
+      if(showDebug){
+        debugEl.textContent=`
+Alpha: ${alpha.toFixed(1)}
+Alt:   ${altitude.toFixed(1)}
+Gamma: ${gamma.toFixed(1)}
+Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altitude.toFixed(1)}
+        `;
+      }
+    }
+
+    /******************************************************
+     * CALIBRACIÓN
+     ******************************************************/
+    function startCalibration(){
+      calibrating=true;
+      calibrationUI.style.display="flex";
+      controls.style.pointerEvents="none";
+      updateCalibrationUI();
+    }
+    function updateCalibrationUI(){
+      const alt=deviceOrientation.altitude;
+      const g=deviceOrientation.gamma;
+      const rangeAlt=60, rangeG=60;
+      const limitedAlt=Math.max(-rangeAlt,Math.min(rangeAlt,alt));
+      const limitedG=Math.max(-rangeG,Math.min(rangeG,g));
+      const radius=80;
+      const x=(limitedG/rangeG)*radius;
+      const y=-(limitedAlt/rangeAlt)*radius;
+      calibrationDot.style.transform=`translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    }
+    confirmCalibration.addEventListener("click",()=>{
+      calibrationOffset.alpha=deviceOrientation.alpha;
+      calibrationOffset.altitude=deviceOrientation.altitude;
+      calibrationOffset.gamma=deviceOrientation.gamma;
+      calibrationUI.style.display="none";
+      controls.style.pointerEvents="auto";
+      calibrating=false;
+      video.play();
+      calibMsg.textContent="¡Calibración completada!";
+      setTimeout(()=>calibMsg.textContent="",2000);
+    });
+
+    /******************************************************
+     * REINICIAR
+     ******************************************************/
+    calibrateBtn.addEventListener("click", startCalibration);
+    resetBtn.addEventListener("click",()=>{
+      if(stream) stream.getTracks().forEach(t=>t.stop());
+      window.location.reload();
+    });
+
+    /******************************************************
+     * AJUSTAR CANVAS
+     ******************************************************/
+    function resizeCanvas(){
+      skyCanvas.width=window.innerWidth;
+      skyCanvas.height=window.innerHeight;
+    }
+
+    /******************************************************
+     * BUCLE DE ACTUALIZACIÓN
+     ******************************************************/
+    function updatePositions(){
+      if(!appActive||calibrating){
+        requestAnimationFrame(updatePositions);
+        return;
+      }
+
+      // Limpiar canvas
+      ctx.clearRect(0,0, skyCanvas.width, skyCanvas.height);
+
+      // Estrellas de fondo
+      backgroundStars.forEach(bs=>{
+        const pos=calculateScreenPosition(bs.azimuth,bs.altitude);
+        if(pos.inView){
+          bs.element.style.display="block";
+          bs.element.style.left=pos.x+"px";
+          bs.element.style.top=pos.y+"px";
+          bs.element.style.opacity="1";
+          bs.element.style.transform="scale(1)";
+        } else {
+          bs.element.style.display="none";
+          bs.element.style.opacity="0";
+          bs.element.style.transform="scale(0.5)";
+        }
+      });
+
+      // Víctimas
+      let visibleVictims=[];
+      victimStars.forEach(vs=>{
+        const pos=calculateScreenPosition(vs.azimuth,vs.altitude);
+        if(pos.inView){
+          vs.element.style.display="block";
+          vs.element.style.left=pos.x+"px";
+          vs.element.style.top=pos.y+"px";
+          vs.element.style.opacity="1";
+          vs.element.style.transform="scale(1)";
+
+          // Distancia al centro para mostrar nombre
+          const dx=pos.x - window.innerWidth/2;
+          const dy=pos.y - window.innerHeight/2;
+          const dist=Math.sqrt(dx*dx+dy*dy);
+          // Solo mostramos el nombre si < 150 px
+          if(dist<80){
+            vs.nameTag.style.opacity="1";
+          } else {
+            vs.nameTag.style.opacity="0";
+          }
+
+          vs.nameTag.style.left=pos.x+"px";
+          vs.nameTag.style.top=(pos.y - vs.size/2 -5)+"px";
+
+          visibleVictims.push({ data:vs, x:pos.x, y:pos.y });
+        } else {
+          vs.element.style.display="none";
+          vs.element.style.opacity="0";
+          vs.element.style.transform="scale(0.5)";
+          vs.nameTag.style.opacity="0";
+        }
+      });
+
+      // Dibujar líneas con glow
+      ctx.save();
+      ctx.strokeStyle="rgba(255,255,255,0.7)";
+      ctx.lineWidth=1.2;
+      ctx.shadowColor="rgba(255,255,255,0.8)";
+      ctx.shadowBlur=12; // glow más visible
+
+      visibleVictims.forEach(v1=>{
+        let st=v1.data;
+        st.connections.forEach(cIdx=>{
+          let target=victimStars[cIdx];
+          let found=visibleVictims.find(v=>v.data===target);
+          if(found){
+            const dx=v1.x-found.x;
+            const dy=v1.y-found.y;
+            const dist=Math.sqrt(dx*dx+dy*dy);
+            // Menor a 120 px => línea
+            if(dist<120){
+              ctx.beginPath();
+              ctx.moveTo(v1.x,v1.y);
+              ctx.lineTo(found.x,found.y);
+              ctx.stroke();
+            }
+          }
+        });
+      });
+      ctx.restore();
+
+      // Estrella más cercana al centro
+      let closestStar=null; 
+      let minDist=Infinity;
+      const centerX=window.innerWidth/2, centerY=window.innerHeight/2;
+      visibleVictims.forEach(vv=>{
+        const dx=vv.x-centerX;
+        const dy=vv.y-centerY;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<minDist && dist<60){
+          minDist=dist;
+          closestStar=vv.data;
+        }
+      });
+      if(closestStar){
+        objectName.textContent=closestStar.name;
+        objectDesc.textContent="Víctima de falsos positivos";
+        objectInfo.style.display="block";
+      } else {
+        objectInfo.style.display="none";
+      }
+
+      requestAnimationFrame(updatePositions);
+    }
+
+    /******************************************************
+     * CALCULAR POSICIÓN (AR)
+     ******************************************************/
+    function calculateScreenPosition(azimuth,altitude){
+      const alpha=(deviceOrientation.alpha - calibrationOffset.alpha+360)%360;
+      const alt=deviceOrientation.altitude - calibrationOffset.altitude;
+      let dAz=azimuth-alpha;
+      dAz=((dAz+540)%360)-180; // -180..180
+      const dAlt=altitude-alt;
+      const fovFactor=2.5;
+      const x=window.innerWidth/2 + (dAz/fovFactor)*(window.innerWidth/50);
+      const y=window.innerHeight/2 - (dAlt/fovFactor)*(window.innerHeight/50);
+      const inView=(Math.abs(dAz)<90 && Math.abs(dAlt)<70);
+      return { x, y, inView };
+    }
+
+    /******************************************************
+     * ESTRELLAS FUGACES
+     ******************************************************/
+    function createShootingStar(){
+      if(!appActive||calibrating)return;
+      const el=document.createElement("div");
+      el.className="shooting-star";
+      const length=50+Math.random()*100;
+      el.style.width=length+"px";
+      const x=Math.random()*window.innerWidth;
+      const y=Math.random()*(window.innerHeight/3);
+      el.style.left=x+"px";
+      el.style.top=y+"px";
+      const angle=((Math.random()*60+30)*Math.PI)/180;
+      el.style.transform=`rotate(${angle}rad)`;
+      document.body.appendChild(el);
+      el.animate([
+        {opacity:0, transform:`rotate(${angle}rad) translateX(0)`},
+        {opacity:1, transform:`rotate(${angle}rad) translateX(${length*0.3}px)`},
+        {opacity:1, transform:`rotate(${angle}rad) translateX(${length*0.7}px)`},
+        {opacity:0, transform:`rotate(${angle}rad) translateX(${length}px)`}
+      ], {
+        duration:1000+Math.random()*1000,
+        easing:"ease-in-out"
+      }).onfinish=()=>el.remove();
+    }
+
+    /******************************************************
+     * TOGGLE DEBUG
+     ******************************************************/
+    function toggleDebug(){
+      showDebug=!showDebug;
+      debugEl.style.display=showDebug?"block":"none";
+    }
+
+    /******************************************************
+     * MENSAJE OVERLAY
+     ******************************************************/
+    function msgOverlay(txt){
+      const d=document.createElement("div");
+      d.style.position="fixed";
+      d.style.top="50%"; d.style.left="50%";
+      d.style.transform="translate(-50%,-50%)";
+      d.style.background="rgba(0,0,0,0.8)";
+      d.style.color="#fff";
+      d.style.padding="20px";
+      d.style.borderRadius="10px";
+      d.style.zIndex="999";
+      d.style.maxWidth="80%";
+      d.style.textAlign="center";
+      d.innerHTML=txt;
+      document.body.appendChild(d);
+      setTimeout(()=>d.remove(),4000);
+    }
+  </script>
+</body>
+</html>
