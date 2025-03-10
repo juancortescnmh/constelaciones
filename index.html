@@ -39,7 +39,7 @@
     }
 
     /* ============================
-       RESETEO Y ESTILO BASE
+       RESET Y ESTILO BASE
     ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -421,7 +421,7 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // Usaremos solo portrait: en este modo, asumimos window.orientation==0
+    // En portrait, usaremos beta y gamma de forma directa.
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
@@ -648,7 +648,7 @@
     });
     
     /******************************************************
-     * ORIENTACIÓN (Para modo portrait)
+     * ORIENTACIÓN (modo portrait)
      ******************************************************/
     function handleOrientation(evt) {
       if (!appActive) return;
@@ -659,10 +659,10 @@
         alpha = (360 - (evt.alpha || 0)) % 360;
       }
     
-      // Asumimos que el dispositivo está en modo vertical (portrait)
-      // Para portrait, usamos evt.beta (menos 90) para el eje vertical y evt.gamma sin invertir para horizontal.
-      let altitude = (evt.beta || 0) - 90;
-      let gamma = evt.gamma || 0;
+      // En portrait, usamos evt.beta para el eje vertical y evt.gamma para el horizontal
+      // Cuando el dispositivo está plano, evt.beta suele ser 90 y evt.gamma 0.
+      let altitude = (evt.beta || 0) - 90; // vertical: 0 en reposo
+      let gamma = evt.gamma || 0;          // horizontal: 0 en reposo
     
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = altitude;
@@ -868,8 +868,8 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       dAz = ((dAz + 540) % 360) - 180;
       const dAlt = altitude - alt;
       const fovFactor = 2.5;
-      // Para portrait, usamos el eje horizontal sin invertir y vertical de forma directa.
-      const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
+      // Incorporar deviceOrientation.gamma (eje horizontal) en la posición X
+      const x = window.innerWidth / 2 + ((dAz + deviceOrientation.gamma - calibrationOffset.gamma) / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
       const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
