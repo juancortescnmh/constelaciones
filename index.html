@@ -8,12 +8,11 @@
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
   <title>Constelaciones AR</title>
 
-  <!-- Tipografía Avenir (con fallback a sans-serif) -->
+  <!-- Tipografía Avenir (si está instalada, sino fallback a sans-serif) -->
   <style>
     @font-face {
       font-family: 'Avenir';
-      /* Puedes enlazar un archivo local o usar el instalado en el sistema */
-      src: local('Avenir'), local('AvenirLTStd-Book'); 
+      src: local('Avenir'), local('AvenirLTStd-Book');
     }
   </style>
 
@@ -42,7 +41,9 @@
     /* ============================
        RESETEO Y ESTILO BASE
     ============================ */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+    }
     body {
       overflow: hidden;
       background: #000;
@@ -299,18 +300,14 @@
     }
     #calibrationIndicator {
       width: 200px; height: 200px;
-      border-radius: 50%;
-      border: 2px solid #82b1ff;
-      position: relative;
-      margin-bottom: 40px;
+      border-radius: 50%; border: 2px solid #82b1ff;
+      position: relative; margin-bottom: 40px;
       animation: panelFadeIn 0.8s ease forwards;
     }
     #calibrationDot {
       width: 20px; height: 20px;
-      background-color: #2962ff;
-      border-radius: 50%;
-      position: absolute;
-      left: 50%; top: 50%;
+      background-color: #2962ff; border-radius: 50%;
+      position: absolute; left: 50%; top: 50%;
       transform: translate(-50%,-50%);
       box-shadow: 0 0 10px rgba(41,98,255,0.7);
     }
@@ -367,7 +364,7 @@
   <!-- Retícula central -->
   <div class="center-reticle"></div>
 
-  <!-- Controles (Calibrar, Reiniciar) -->
+  <!-- Controles -->
   <div id="controls">
     <button id="calibrateBtn" class="btn">Calibrar</button>
     <button id="resetBtn" class="btn">Reiniciar</button>
@@ -385,7 +382,7 @@
     <p>
       Otorga permisos de cámara y sensores.<br/>
       Presiona <strong>Comenzar</strong> para disfrutar.<br/>
-      (Si usas iPhone, asegúrate de tener activado "Motion & Orientation Access" en Ajustes > Safari).
+      (Si usas iPhone, asegúrate de que Safari tenga activado el acceso a orientación, o borra los datos del sitio si ya lo rechazaste).
     </p>
     <button id="startBtn">Comenzar</button>
   </div>
@@ -560,7 +557,7 @@
 
     // Conecta cada estrella con las 2 más cercanas (umbral reducido para constelaciones más pequeñas)
     function computeConnections(){
-      const threshold = 20;  // umbral en grados
+      const threshold = 20;
       victimStars.forEach((star, i) => {
         let distances = [];
         victimStars.forEach((other, j) => {
@@ -579,10 +576,10 @@
      * SOLICITAR PERMISO DE ORIENTACIÓN (GIROSCOPIO)
      ******************************************************/
     async function requestOrientationPermission() {
-      // Para iOS 13+ es necesario llamar a requestPermission() en un gesto de usuario.
-      if (typeof DeviceOrientationEvent !== "undefined" && 
+      if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
+          // Esta llamada debe realizarse en respuesta a un gesto de usuario
           const response = await DeviceOrientationEvent.requestPermission();
           if (response === "granted") {
             return true;
@@ -594,7 +591,7 @@
           return false;
         }
       }
-      // En otros dispositivos, asumimos que ya está permitido.
+      // Si el navegador no requiere requestPermission (Android, etc.), asumimos permiso.
       return true;
     }
 
@@ -611,10 +608,9 @@
         // 2) Solicitar permiso de orientación (giroscopio)
         const permissionGranted = await requestOrientationPermission();
         if (!permissionGranted) {
-          msgOverlay("Permiso de orientación denegado. Revisa Ajustes > Safari > Motion & Orientation Access.");
+          msgOverlay("Permiso de orientación denegado. Si ya lo rechazaste, borra los datos del sitio en Safari.");
           throw new Error("Permiso de orientación denegado");
         }
-        // Añadir listener de orientación
         window.addEventListener("deviceorientation", handleOrientation);
 
         // 3) Ocultar panel de inicio y mostrar controles
@@ -627,7 +623,7 @@
         createBackgroundStars();
         createVictimStars();
 
-        // 5) Activar la aplicación
+        // 5) Activar la app
         appActive = true;
 
         // 6) Estrellas fugaces
@@ -636,7 +632,7 @@
         // 7) Calibración inicial
         startCalibration();
 
-        // 8) Habilitar debug (doble click)
+        // 8) Habilitar debug con doble click
         document.addEventListener("dblclick", toggleDebug);
 
         // 9) Iniciar bucle de actualización
@@ -769,7 +765,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          // Solo mostrar nombre si < 80px del centro
+          // Solo mostrar nombre si está a menos de 80px del centro
           if (dist < 80) {
             vs.nameTag.style.opacity = "1";
           } else {
@@ -802,7 +798,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
             const dx = v1.x - found.x;
             const dy = v1.y - found.y;
             const screenDist = Math.sqrt(dx * dx + dy * dy);
-            if (screenDist < 120) { // solo líneas cortas
+            if (screenDist < 120) {
               ctx.beginPath();
               ctx.moveTo(v1.x, v1.y);
               ctx.lineTo(found.x, found.y);
@@ -813,7 +809,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       });
       ctx.restore();
 
-      // Determinar la estrella más cercana al centro para mostrar información
+      // Determinar la estrella más cercana al centro para mostrar info en el panel
       let closestStar = null;
       let minDist = Infinity;
       const centerX = window.innerWidth / 2;
@@ -890,7 +886,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     }
 
     /******************************************************
-     * MENSAJE OVERLAY (para avisos al usuario)
+     * MENSAJE OVERLAY (para avisar al usuario)
      ******************************************************/
     function msgOverlay(txt) {
       const d = document.createElement("div");
