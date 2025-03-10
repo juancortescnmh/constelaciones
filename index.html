@@ -39,7 +39,7 @@
     }
 
     /* ============================
-       RESET Y ESTILO BASE
+       RESETEO Y ESTILO BASE
     ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -183,10 +183,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       font-family: 'Avenir', sans-serif;
     }
-    .btn:hover {
-      background: rgba(40,63,83,0.8);
-      cursor: pointer;
-    }
+    .btn:hover { background: rgba(40,63,83,0.8); cursor: pointer; }
 
     /* ============================
        PANEL DE INFORMACIÓN
@@ -250,7 +247,7 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Dos botones: Solicitar permiso y Comenzar */
+    /* Botones en el panel de inicio */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -358,61 +355,50 @@
 <body>
   <!-- Cámara -->
   <video id="video" playsinline muted></video>
-
   <!-- Fondo cósmico -->
   <div id="starfield"></div>
-
   <!-- Canvas para líneas -->
   <canvas id="skyCanvas"></canvas>
-
   <!-- Retícula central -->
   <div class="center-reticle"></div>
-
   <!-- Controles -->
   <div id="controls">
     <button id="calibrateBtn" class="btn">Calibrar</button>
     <button id="resetBtn" class="btn">Reiniciar</button>
   </div>
-
   <!-- Panel de información -->
   <div id="objectInfo">
     <h3 id="objectName"></h3>
     <p id="objectDesc"></p>
   </div>
-
-  <!-- Panel de inicio con dos botones -->
+  <!-- Panel de inicio -->
   <div id="startPanel">
     <h1>Constelaciones AR</h1>
     <p>
-      Usa la app en modo vertical.<br/>
-      Primero haz clic en <strong>Solicitar Permiso de Orientación</strong>.<br/>
-      Luego presiona <strong>Comenzar</strong> para iniciar.
+      Use the app in vertical mode.<br/>
+      First, click <strong>Request Orientation Permission</strong>.<br/>
+      Then click <strong>Start</strong> to begin.
     </p>
-    <button id="requestPermissionBtn">Solicitar Permiso de Orientación</button>
-    <button id="startBtn" disabled>Comenzar</button>
+    <button id="requestPermissionBtn">Request Orientation Permission</button>
+    <button id="startBtn" disabled>Start</button>
   </div>
-
   <!-- Panel de calibración -->
   <div id="calibrationUI">
-    <h2>Calibración</h2>
+    <h2>Calibration</h2>
     <p>
-      Apunta tu teléfono al frente y alinea la bola azul<br/>
-      en el centro de la pantalla. Luego presiona Confirmar.
+      Point your phone straight ahead and align the blue dot at the center.<br/>
+      Then click Confirm.
     </p>
     <div id="calibrationIndicator">
       <div id="calibrationDot"></div>
     </div>
-    <button id="confirmCalibration">Confirmar</button>
+    <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
-
   <!-- Debug info -->
   <div id="debug"></div>
-
   <script>
-    /******************************************************
-     * VARIABLES DE ESTADO
-     ******************************************************/
+    /***** VARIABLES DE ESTADO *****/
     let appActive = false;
     let calibrating = false;
     let stream = null;
@@ -421,7 +407,7 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // En portrait, usaremos beta y gamma de forma directa.
+    // En portrait, usaremos evt.beta y evt.gamma directamente.
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
@@ -447,35 +433,31 @@
     const debugEl = document.getElementById("debug");
     const calibMsg = document.getElementById("calibMsg");
 
-    /******************************************************
-     * LISTA DE VÍCTIMAS DE FALSOS POSITIVOS
-     ******************************************************/
+    /***** LISTA DE NOMBRES (Víctimas) *****/
     const victimNames = [
-      "Saín Álvarez","Jorge Eliécer García Claro","Ariel Jaime Arias","Ramiro Blanco Rubio",
-      "Miguel Ángel Carrascal Toro","Dioselino Durán Pérez","Guillermo Reyes Aponte","Alejandro Chocó Cáceres",
-      "Miguel Ángel Peña Ortega","Luis Antonio Sánchez Guerrero","William Sarabia Jaimes","Deiber Ramírez",
-      "Euclides García Claro","Jair Julio Vega","Diosemiro Chinchilla Contreras","Jhon Jairo Contreras Vera",
-      "Pedro Jesús Bayona Rojas","Gerardo Quintero Jaimes","Luis Carlos Angarita","José Néstor Rodríguez Santana",
-      "Jesús Emilio Navarro Garay","Daniel Suárez Martínez","Jaime Castillo Peña","Diego Alberto Tamayo Garcera",
-      "Carlos Mauricio Nova Vega","Rafael Plata Irene","Álvaro Adolfo Piña Londoño","Álvaro César Olivera Granados",
-      "Andres Abelino Vega","Ángel Miguel Soto","Antonio Carillo","Ariel Enrique Marín Urrutia",
-      "Armando Rafael Morales Pérez","Carlos Alberto Castro Aguirre","Carlos Alberto Pumarejo López Sierra",
-      "Carlos Arturo Cáceres","Carlos Jaime Amarís","Carlos Arturo Montes","Carlos Carmona",
-      "Cristian Camilo Santiago Redondo","David Rubio","Donaldo Antonio Gamero Barrios","Eduard Cáceres Prado",
-      "Evelio Vaca Pérez","Ever Antonio Barrera Jiménez","Francisco Rafael Barraza","Fredy Antonio Naranjo Martínez",
-      "Hector Raúl Arévalo Serrano","Javier Armando Molina","Jesús María Coronel","Joaquín Felipe Contreras Romero",
-      "Joaquín Vergara Cárdenas","José Antonio Mercado Hernández","José Gregorio Vargas","José Ignacio Pacheco Suárez",
-      "José Miguel Palacios","Juan Carlos Galvis Solano","Leiner Guerrero Ayala","Leonardo Enrique Porto Egea",
-      "Luis Alberto Palomino Villar","Luis Eduardo Oñate","Luis Felipe Pavón","Luis Fernando Daza Malo",
-      "Luis Javier Molina Gutiérrez","Manuel Romero Negrete","Mario Alejandro Lozano Villada","Martín Villazón Ochoa",
-      "Nohemí Ester Pacheco Sábata","Rafael Ignacio Puerta Flores","Tania Solano Tristancho","Uriel Evangelista Arias",
-      "Victor Enrique Carpintero Manjares","Wilmar Antonio Serrano Quintero","Alberto de Jesús Aragón Aragón",
-      "Jesús Emilio Márquez Gutiérrez","Jesús Javier Suárez Caro","Isidoro de Jesús Cardona","Isaías Rueda Cardona"
+      "Saín Álvarez", "Jorge Eliécer García Claro", "Ariel Jaime Arias", "Ramiro Blanco Rubio",
+      "Miguel Ángel Carrascal Toro", "Dioselino Durán Pérez", "Guillermo Reyes Aponte", "Alejandro Chocó Cáceres",
+      "Miguel Ángel Peña Ortega", "Luis Antonio Sánchez Guerrero", "William Sarabia Jaimes", "Deiber Ramírez",
+      "Euclides García Claro", "Jair Julio Vega", "Diosemiro Chinchilla Contreras", "Jhon Jairo Contreras Vera",
+      "Pedro Jesús Bayona Rojas", "Gerardo Quintero Jaimes", "Luis Carlos Angarita", "José Néstor Rodríguez Santana",
+      "Jesús Emilio Navarro Garay", "Daniel Suárez Martínez", "Jaime Castillo Peña", "Diego Alberto Tamayo Garcera",
+      "Carlos Mauricio Nova Vega", "Rafael Plata Irene", "Álvaro Adolfo Piña Londoño", "Álvaro César Olivera Granados",
+      "Andres Abelino Vega", "Ángel Miguel Soto", "Antonio Carillo", "Ariel Enrique Marín Urrutia",
+      "Armando Rafael Morales Pérez", "Carlos Alberto Castro Aguirre", "Carlos Alberto Pumarejo López Sierra",
+      "Carlos Arturo Cáceres", "Carlos Jaime Amarís", "Carlos Arturo Montes", "Carlos Carmona",
+      "Cristian Camilo Santiago Redondo", "David Rubio", "Donaldo Antonio Gamero Barrios", "Eduard Cáceres Prado",
+      "Evelio Vaca Pérez", "Ever Antonio Barrera Jiménez", "Francisco Rafael Barraza", "Fredy Antonio Naranjo Martínez",
+      "Hector Raúl Arévalo Serrano", "Javier Armando Molina", "Jesús María Coronel", "Joaquín Felipe Contreras Romero",
+      "Joaquín Vergara Cárdenas", "José Antonio Mercado Hernández", "José Gregorio Vargas", "José Ignacio Pacheco Suárez",
+      "José Miguel Palacios", "Juan Carlos Galvis Solano", "Leiner Guerrero Ayala", "Leonardo Enrique Porto Egea",
+      "Luis Alberto Palomino Villar", "Luis Eduardo Oñate", "Luis Felipe Pavón", "Luis Fernando Daza Malo",
+      "Luis Javier Molina Gutiérrez", "Manuel Romero Negrete", "Mario Alejandro Lozano Villada", "Martín Villazón Ochoa",
+      "Nohemí Ester Pacheco Sábata", "Rafael Ignacio Puerta Flores", "Tania Solano Tristancho", "Uriel Evangelista Arias",
+      "Victor Enrique Carpintero Manjares", "Wilmar Antonio Serrano Quintero", "Alberto de Jesús Aragón Aragón",
+      "Jesús Emilio Márquez Gutiérrez", "Jesús Javier Suárez Caro", "Isidoro de Jesús Cardona", "Isaías Rueda Cardona"
     ];
 
-    /******************************************************
-     * ESTRELLAS DE FONDO
-     ******************************************************/
+    /***** ESTRELLAS DE FONDO *****/
     const BACKGROUND_STAR_COUNT = 400;
     let backgroundStarsArr = [];
     function createBackgroundStars(){
@@ -496,9 +478,7 @@
       }
     }
 
-    /******************************************************
-     * ESTRELLAS DE VÍCTIMAS
-     ******************************************************/
+    /***** ESTRELLAS DE VÍCTIMAS *****/
     let victimStars = [];
     function createVictimStars(){
       victimStars = [];
@@ -515,16 +495,9 @@
             let dAz = az - st.azimuth;
             let dAlt = alt - st.altitude;
             let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-            if (dist < minDistDeg){
-              ok = false;
-              break;
-            }
+            if (dist < minDistDeg){ ok = false; break; }
           }
-          if (ok){
-            placedStars.push({ azimuth: az, altitude: alt, name });
-            placed = true;
-            break;
-          }
+          if (ok){ placedStars.push({ azimuth: az, altitude: alt, name }); placed = true; break; }
         }
         if (!placed) { console.log("No se pudo ubicar:", name); }
       });
@@ -556,7 +529,6 @@
         st.nameTag = nameEl;
       });
     }
-
     function computeConnections(){
       const threshold = 20;
       victimStars.forEach((star, i) => {
@@ -566,16 +538,14 @@
           let dAz = star.azimuth - other.azimuth;
           let dAlt = star.altitude - other.altitude;
           let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-          distances.push({ index: j, dist });
+          distances.push({ index: j, dist: dist });
         });
         distances.sort((a, b) => a.dist - b.dist);
         star.connections = distances.filter(d => d.dist < threshold).slice(0, 2).map(d => d.index);
       });
     }
 
-    /******************************************************
-     * SOLICITAR PERMISO DE ORIENTACIÓN
-     ******************************************************/
+    /***** SOLICITAR PERMISO DE ORIENTACIÓN *****/
     async function requestOrientationPermission() {
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
@@ -583,112 +553,78 @@
           const response = await DeviceOrientationEvent.requestPermission();
           return response === "granted";
         } catch (error) {
-          console.error("Error al solicitar permiso de orientación:", error);
+          console.error("Error al solicitar permiso:", error);
           return false;
         }
       }
       return true;
     }
-
-    /******************************************************
-     * BOTÓN: Solicitar Permiso de Orientación
-     ******************************************************/
     requestPermissionBtn.addEventListener("click", async () => {
       const granted = await requestOrientationPermission();
       if (granted) {
-        msgOverlay("Permiso de orientación concedido.");
+        msgOverlay("Orientation permission granted.");
         requestPermissionBtn.style.display = "none";
         startBtn.disabled = false;
       } else {
-        msgOverlay("Permiso de orientación denegado. Borra los datos del sitio en Safari e inténtalo de nuevo.");
+        msgOverlay("Orientation permission denied. Clear site data in Safari and try again.");
       }
     });
 
-    /******************************************************
-     * INICIAR APLICACIÓN
-     ******************************************************/
+    /***** INICIAR APLICACIÓN *****/
     startBtn.addEventListener("click", async () => {
       try {
-        // Forzar modo vertical: si window.orientation no es 0, pedir que se use vertical.
         if (window.orientation !== 0) {
-          msgOverlay("Por favor, usa la app en modo vertical.");
+          msgOverlay("Please use the app in vertical (portrait) mode.");
           return;
         }
-    
-        // Obtener cámara
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
         await video.play();
-    
         if (!window.DeviceOrientationEvent.requestPermission) {
           window.addEventListener("deviceorientation", handleOrientation);
         }
-    
         startPanel.style.display = "none";
         controls.style.display = "flex";
-    
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
         createBackgroundStars();
         createVictimStars();
-    
         appActive = true;
-    
         setInterval(createShootingStar, 3000);
-    
         startCalibration();
-    
         document.addEventListener("dblclick", toggleDebug);
-    
         requestAnimationFrame(updatePositions);
       } catch (err) {
-        console.error("Error al iniciar:", err);
-        msgOverlay("Error al iniciar: " + err.message);
+        console.error("Error starting app:", err);
+        msgOverlay("Error starting app: " + err.message);
       }
     });
-    
-    /******************************************************
-     * ORIENTACIÓN (modo portrait)
-     ******************************************************/
+
+    /***** ORIENTATION HANDLER (Portrait Mode) *****/
     function handleOrientation(evt) {
       if (!appActive) return;
-      let alpha;
-      if (typeof evt.webkitCompassHeading === "number") {
-        alpha = evt.webkitCompassHeading;
-      } else {
-        alpha = (360 - (evt.alpha || 0)) % 360;
-      }
-    
-      // En portrait, usamos evt.beta para el eje vertical y evt.gamma para el horizontal
-      // Cuando el dispositivo está plano, evt.beta suele ser 90 y evt.gamma 0.
-      let altitude = (evt.beta || 0) - 90; // vertical: 0 en reposo
-      let gamma = evt.gamma || 0;          // horizontal: 0 en reposo
-    
+      let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
+      // En portrait, usamos evt.beta (restado 90) para vertical y evt.gamma para horizontal
+      let vertical = (evt.beta || 0) - 90;
+      let horizontal = evt.gamma || 0;
       deviceOrientation.alpha = alpha;
-      deviceOrientation.altitude = altitude;
-      deviceOrientation.gamma = gamma;
-    
+      deviceOrientation.altitude = vertical;
+      deviceOrientation.gamma = horizontal;
       lastOrientationUpdate = Date.now();
-    
       if (calibrating) updateCalibrationUI();
       if (showDebug) {
         debugEl.textContent = `
 Alpha: ${alpha.toFixed(1)}
-Alt:   ${altitude.toFixed(1)}
-Gamma: ${gamma.toFixed(1)}
+Vertical (Beta-90): ${vertical.toFixed(1)}
+Horizontal (Gamma): ${horizontal.toFixed(1)}
 Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altitude.toFixed(1)}
         `;
       }
     }
-    
-    /******************************************************
-     * FALLBACK: DEVICEMOTION PARA GIROSCOPIO
-     ******************************************************/
+
+    /***** FALLBACK: DEVICEMOTION *****/
     window.addEventListener("devicemotion", (evt) => {
-      if (!lastMotionTimestamp) {
-        lastMotionTimestamp = evt.timeStamp;
-        return;
-      }
+      if (!lastMotionTimestamp) { lastMotionTimestamp = evt.timeStamp; return; }
       const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
       lastMotionTimestamp = evt.timeStamp;
       if (Date.now() - lastOrientationUpdate > 1000) {
@@ -703,10 +639,8 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         }
       }
     });
-    
-    /******************************************************
-     * CALIBRACIÓN
-     ******************************************************/
+
+    /***** CALIBRATION *****/
     function startCalibration() {
       calibrating = true;
       calibrationUI.style.display = "flex";
@@ -715,12 +649,12 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     }
     function updateCalibrationUI() {
       const alt = deviceOrientation.altitude;
-      const g = deviceOrientation.gamma;
-      const rangeAlt = 60, rangeG = 60;
+      const hor = deviceOrientation.gamma;
+      const rangeAlt = 60, rangeHor = 60;
       const limitedAlt = Math.max(-rangeAlt, Math.min(rangeAlt, alt));
-      const limitedG = Math.max(-rangeG, Math.min(rangeG, g));
+      const limitedHor = Math.max(-rangeHor, Math.min(rangeHor, hor));
       const radius = 80;
-      const x = (limitedG / rangeG) * radius;
+      const x = (limitedHor / rangeHor) * radius;
       const y = -(limitedAlt / rangeAlt) * radius;
       calibrationDot.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
     }
@@ -732,38 +666,28 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       controls.style.pointerEvents = "auto";
       calibrating = false;
       video.play();
-      calibMsg.textContent = "¡Calibración completada!";
+      calibMsg.textContent = "Calibration complete!";
       setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
-    
-    /******************************************************
-     * REINICIAR
-     ******************************************************/
+
     calibrateBtn.addEventListener("click", startCalibration);
     resetBtn.addEventListener("click", () => {
       if (stream) { stream.getTracks().forEach(t => t.stop()); }
       window.location.reload();
     });
-    
-    /******************************************************
-     * AJUSTAR CANVAS
-     ******************************************************/
+
     function resizeCanvas() {
       skyCanvas.width = window.innerWidth;
       skyCanvas.height = window.innerHeight;
     }
-    
-    /******************************************************
-     * BUCLE DE ACTUALIZACIÓN
-     ******************************************************/
+
+    /***** UPDATE LOOP *****/
     function updatePositions() {
       if (!appActive || calibrating) {
         requestAnimationFrame(updatePositions);
         return;
       }
-    
       ctx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
-    
       backgroundStarsArr.forEach(bs => {
         const pos = calculateScreenPosition(bs.azimuth, bs.altitude);
         if (pos.inView) {
@@ -778,7 +702,6 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           bs.element.style.transform = "scale(0.5)";
         }
       });
-    
       let visibleVictims = [];
       victimStars.forEach(vs => {
         const pos = calculateScreenPosition(vs.azimuth, vs.altitude);
@@ -788,18 +711,12 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           vs.element.style.top = pos.y + "px";
           vs.element.style.opacity = "1";
           vs.element.style.transform = "scale(1)";
-    
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 80) {
-            vs.nameTag.style.opacity = "1";
-          } else {
-            vs.nameTag.style.opacity = "0";
-          }
+          vs.nameTag.style.opacity = (dist < 80) ? "1" : "0";
           vs.nameTag.style.left = pos.x + "px";
           vs.nameTag.style.top = (pos.y - vs.size / 2 - 5) + "px";
-    
           visibleVictims.push({ data: vs, x: pos.x, y: pos.y });
         } else {
           vs.element.style.display = "none";
@@ -808,7 +725,6 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           vs.nameTag.style.opacity = "0";
         }
       });
-    
       ctx.save();
       ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.lineWidth = 1.2;
@@ -833,7 +749,6 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         });
       });
       ctx.restore();
-    
       let closestStar = null;
       let minDist = Infinity;
       const centerX = window.innerWidth / 2;
@@ -854,13 +769,10 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       } else {
         objectInfo.style.display = "none";
       }
-    
       requestAnimationFrame(updatePositions);
     }
-    
-    /******************************************************
-     * CALCULAR POSICIÓN (AR)
-     ******************************************************/
+
+    /***** CALCULAR POSICIÓN (AR) *****/
     function calculateScreenPosition(azimuth, altitude) {
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
@@ -868,16 +780,14 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       dAz = ((dAz + 540) % 360) - 180;
       const dAlt = altitude - alt;
       const fovFactor = 2.5;
-      // Incorporar deviceOrientation.gamma (eje horizontal) en la posición X
+      // En portrait, usamos dAz y deviceOrientation.gamma para el eje horizontal
       const x = window.innerWidth / 2 + ((dAz + deviceOrientation.gamma - calibrationOffset.gamma) / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
       const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
     }
-    
-    /******************************************************
-     * ESTRELLAS FUGACES
-     ******************************************************/
+
+    /***** ESTRELLAS FUGACES *****/
     function createShootingStar() {
       if (!appActive || calibrating) return;
       const el = document.createElement("div");
@@ -896,23 +806,16 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
         { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
         { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
-      ], {
-        duration: 1000 + Math.random() * 1000,
-        easing: "ease-in-out"
-      }).onfinish = () => el.remove();
+      ], { duration: 1000 + Math.random() * 1000, easing: "ease-in-out" }).onfinish = () => el.remove();
     }
-    
-    /******************************************************
-     * TOGGLE DEBUG
-     ******************************************************/
+
+    /***** TOGGLE DEBUG *****/
     function toggleDebug() {
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
     }
-    
-    /******************************************************
-     * MENSAJE OVERLAY (para avisar al usuario)
-     ******************************************************/
+
+    /***** MENSAJE OVERLAY *****/
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
