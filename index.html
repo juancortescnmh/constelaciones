@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
   <title>Constellations AR</title>
 
-  <!-- Tipografía Avenir (usa Avenir si está instalada, sino se usará sans-serif) -->
+  <!-- Tipografía Avenir (usa Avenir si está instalada, sino fallback a sans-serif) -->
   <style>
     @font-face {
       font-family: 'Avenir';
@@ -307,22 +307,15 @@
       font-family: 'Avenir', sans-serif;
     }
     #calibrationIndicator {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
-      border: 2px solid #82b1ff;
-      position: relative;
-      margin-bottom: 40px;
+      width: 200px; height: 200px;
+      border-radius: 50%; border: 2px solid #82b1ff;
+      position: relative; margin-bottom: 40px;
       animation: panelFadeIn 0.8s ease forwards;
     }
     #calibrationDot {
-      width: 20px;
-      height: 20px;
-      background-color: #2962ff;
-      border-radius: 50%;
-      position: absolute;
-      left: 50%;
-      top: 50%;
+      width: 20px; height: 20px;
+      background-color: #2962ff; border-radius: 50%;
+      position: absolute; left: 50%; top: 50%;
       transform: translate(-50%,-50%);
       box-shadow: 0 0 10px rgba(41,98,255,0.7);
     }
@@ -409,7 +402,7 @@
     <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
-  <!-- Debug panel (siempre visible) -->
+  <!-- Debug panel (always visible) -->
   <div id="debug"></div>
   <script>
     /***** STATE VARIABLES *****/
@@ -420,15 +413,15 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // En modo portrait usamos evt.beta y evt.gamma directamente.
+    // En modo portrait usamos los valores directamente.
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     // Detectar si es iOS
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     // Multiplicadores para iOS (ajusta estos valores según lo que observes en el debug)
-    const factorX_iOS = 5.0;
-    const factorY_iOS = 5.0;
+    const factorX_iOS = 5.0; // Amplifica movimiento horizontal en iOS
+    const factorY_iOS = 5.0; // Amplifica movimiento vertical en iOS
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -622,13 +615,19 @@
     function handleOrientation(evt) {
       if (!appActive) return;
       let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
-      // In portrait: use evt.beta for vertical (minus 90) and evt.gamma for horizontal.
-      let vertical = (evt.beta || 0) - 90;
-      let horizontal = evt.gamma || 0;
-      // Para iOS, a veces evt.gamma no se actualiza; si es iOS, usamos el negativo (para probar)
+      // Si no es iOS, usamos evt.beta y evt.gamma de forma directa.
+      // En iOS, se han reportado problemas; por ello, intercambiamos beta y gamma.
+      let vertical, horizontal;
       if (isiOS) {
-        horizontal = -(evt.gamma || 0);
+        vertical = evt.gamma || 0;       // para movimiento vertical en iOS
+        horizontal = evt.beta || 0;        // para movimiento horizontal en iOS
+        // Si se observa que se necesita invertir alguno, se puede ajustar aquí:
+        // horizontal = -horizontal;
+      } else {
+        vertical = evt.beta || 0;          // para movimiento vertical (Android)
+        horizontal = evt.gamma || 0;       // para movimiento horizontal (Android)
       }
+      // No restamos 90 porque en portrait el dispositivo se sostiene vertical.
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = vertical;
       deviceOrientation.gamma = horizontal;
@@ -647,7 +646,6 @@
           fallbackOrientation.alpha += (rr.alpha || 0) * dt;
           fallbackOrientation.beta += (rr.beta || 0) * dt;
           fallbackOrientation.gamma += (rr.gamma || 0) * dt;
-          // Nota: fallbackOrientation.beta se usa solo si deviceOrientation.altitude resulta 0.
           updateDebug();
         }
       }
@@ -790,12 +788,10 @@
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       if (isiOS) {
-        // Para iOS: Mapeo "fijo" – se considera 180° como centro horizontal y 0° de altitud como centro vertical.
-        // Se suma el desplazamiento que proviene de los sensores (fused a partir de deviceOrientation y fallback).
-        const effectiveGamma = (deviceOrientation.gamma !== 0 ? deviceOrientation.gamma : fallbackOrientation.gamma);
-        const effectiveAltitude = (deviceOrientation.altitude !== 0 ? deviceOrientation.altitude : fallbackOrientation.beta || 0);
-        const x = centerX + ((azimuth - 180) / 180) * centerX + (effectiveGamma - calibrationOffset.gamma) * factorX_iOS;
-        const y = centerY - (altitude / 90) * centerY + (effectiveAltitude - calibrationOffset.altitude) * factorY_iOS;
+        // Para iOS: Mapeo fijo – se considera 180° como centro horizontal y 0° de altitud como centro vertical.
+        // Luego se suma el desplazamiento medido por los sensores.
+        const x = centerX + ((azimuth - 180) / 180) * centerX + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
+        const y = centerY - (altitude / 90) * centerY + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
         return { x, y, inView: true };
       } else {
         const userAlpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
@@ -842,20 +838,18 @@
 `[DEBUG]
 Device Orientation:
   Alpha: ${deviceOrientation.alpha.toFixed(1)}
-  Beta-90 (Altitude): ${deviceOrientation.altitude.toFixed(1)}
-  Gamma: ${deviceOrientation.gamma.toFixed(1)}
-Fallback Orientation:
-  Gamma: ${fallbackOrientation.gamma.toFixed(1)}
+  Vertical: ${deviceOrientation.altitude.toFixed(1)}
+  Horizontal: ${deviceOrientation.gamma.toFixed(1)}
+Fallback (Gamma): ${fallbackOrientation.gamma.toFixed(1)}
 Calibration Offsets:
   Alpha: ${calibrationOffset.alpha.toFixed(1)}
-  Altitude: ${calibrationOffset.altitude.toFixed(1)}
-  Gamma: ${calibrationOffset.gamma.toFixed(1)}
-Time since last update: ${((Date.now() - lastOrientationUpdate) / 1000).toFixed(2)} s`;
+  Vertical: ${calibrationOffset.altitude.toFixed(1)}
+  Horizontal: ${calibrationOffset.gamma.toFixed(1)}
+Time since last update: ${((Date.now() - lastOrientationUpdate)/1000).toFixed(2)} s`;
     }
 
     /***** TOGGLE DEBUG (opcional) *****/
     function toggleDebug() {
-      // Puedes usar esta función para ocultar/mostrar el debug, pero aquí se deja visible.
       debugEl.style.display = (debugEl.style.display === "none") ? "block" : "none";
     }
 
