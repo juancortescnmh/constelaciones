@@ -384,7 +384,7 @@
   <div id="startPanel">
     <h1>Constelaciones AR</h1>
     <p>
-      Otorga permisos de cámara y sensores.<br/>
+      Usa la app en modo vertical.<br/>
       Primero haz clic en <strong>Solicitar Permiso de Orientación</strong>.<br/>
       Luego presiona <strong>Comenzar</strong> para iniciar.
     </p>
@@ -421,6 +421,7 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
+    // Usaremos solo portrait: en este modo, asumimos window.orientation==0
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
@@ -608,6 +609,12 @@
      ******************************************************/
     startBtn.addEventListener("click", async () => {
       try {
+        // Forzar modo vertical: si window.orientation no es 0, pedir que se use vertical.
+        if (window.orientation !== 0) {
+          msgOverlay("Por favor, usa la app en modo vertical.");
+          return;
+        }
+    
         // Obtener cámara
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
@@ -641,7 +648,7 @@
     });
     
     /******************************************************
-     * ORIENTACIÓN (ajuste de ejes)
+     * ORIENTACIÓN (Para modo portrait)
      ******************************************************/
     function handleOrientation(evt) {
       if (!appActive) return;
@@ -652,18 +659,10 @@
         alpha = (360 - (evt.alpha || 0)) % 360;
       }
     
-      // Detectar la orientación (portrait vs. landscape)
-      let orientation = window.orientation || 0;
-      let altitude, gamma;
-      if (orientation === 90 || orientation === -90) {
-        // Landscape: intercambiar ejes
-        altitude = evt.gamma || 0;
-        gamma = -(evt.beta || 0) + 90;
-      } else {
-        // Portrait: corregir ejes para que arriba/abajo funcione y horizontal se invierta
-        altitude = (evt.beta || 0) - 90;
-        gamma = -(evt.gamma || 0);
-      }
+      // Asumimos que el dispositivo está en modo vertical (portrait)
+      // Para portrait, usamos evt.beta (menos 90) para el eje vertical y evt.gamma sin invertir para horizontal.
+      let altitude = (evt.beta || 0) - 90;
+      let gamma = evt.gamma || 0;
     
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = altitude;
@@ -869,8 +868,8 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       dAz = ((dAz + 540) % 360) - 180;
       const dAlt = altitude - alt;
       const fovFactor = 2.5;
-      // Invertimos el signo en la componente horizontal para corregir el movimiento
-      const x = window.innerWidth / 2 - (dAz / fovFactor) * (window.innerWidth / 50);
+      // Para portrait, usamos el eje horizontal sin invertir y vertical de forma directa.
+      const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
       const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
