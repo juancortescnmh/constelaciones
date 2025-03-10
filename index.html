@@ -39,7 +39,7 @@
     }
 
     /* ============================
-       RESET Y ESTILO BASE
+       RESETEO Y ESTILO BASE
     ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -250,7 +250,7 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Agregamos dos botones: uno para solicitar permiso y otro para iniciar */
+    /* Se agregan dos botones: uno para solicitar permiso y otro para iniciar */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -385,7 +385,7 @@
     <h1>Constelaciones AR</h1>
     <p>
       Otorga permisos de cámara y sensores.<br/>
-      Primero, haz clic en <strong>Solicitar Permiso de Orientación</strong>.<br/>
+      Primero haz clic en <strong>Solicitar Permiso de Orientación</strong>.<br/>
       Luego presiona <strong>Comenzar</strong> para disfrutar.
     </p>
     <button id="requestPermissionBtn">Solicitar Permiso de Orientación</button>
@@ -420,6 +420,11 @@
 
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
+
+    // Variables para fallback con devicemotion
+    let lastOrientationUpdate = Date.now();
+    let lastMotionTimestamp = null;
+    let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -561,7 +566,7 @@
       });
     }
 
-    // Conecta cada estrella con las 2 más cercanas (umbral reducido para constelaciones más pequeñas)
+    // Conecta cada estrella con las 2 más cercanas (umbral reducido)
     function computeConnections(){
       const threshold = 20;
       victimStars.forEach((star, i) => {
@@ -585,7 +590,7 @@
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
-          // Esta llamada se hace en respuesta directa al clic del usuario
+          // Esta llamada se realiza en respuesta directa al clic
           const response = await DeviceOrientationEvent.requestPermission();
           return response === "granted";
         } catch (error) {
@@ -597,13 +602,54 @@
     }
 
     /******************************************************
+     * FALLBACK: DEVICEMOTION (para integrar rotationRate)
+     ******************************************************/
+    let lastOrientationUpdate = Date.now();
+    let lastMotionTimestamp = null;
+    let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
+
+    // Escuchar deviceorientation para actualizar normalmente
+    window.addEventListener("deviceorientation", (evt) => {
+      if (evt.alpha !== null || evt.beta !== null || evt.gamma !== null) {
+        deviceOrientation.alpha = evt.alpha !== null ? evt.alpha : 0;
+        deviceOrientation.beta = evt.beta !== null ? evt.beta : 0;
+        deviceOrientation.gamma = evt.gamma !== null ? evt.gamma : 0;
+        lastOrientationUpdate = Date.now();
+        // Reiniciar fallback
+        fallbackOrientation.alpha = deviceOrientation.alpha;
+        fallbackOrientation.beta = deviceOrientation.beta;
+        fallbackOrientation.gamma = deviceOrientation.gamma;
+      }
+    });
+
+    // Fallback: usar devicemotion si no llegan updates de deviceorientation
+    window.addEventListener("devicemotion", (evt) => {
+      if (!lastMotionTimestamp) {
+        lastMotionTimestamp = evt.timeStamp;
+        return;
+      }
+      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
+      lastMotionTimestamp = evt.timeStamp;
+      if (Date.now() - lastOrientationUpdate > 1000) { // Si no hubo update en 1s
+        const rr = evt.rotationRate;
+        if (rr) {
+          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
+          fallbackOrientation.beta  += (rr.beta || 0) * dt;
+          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
+          deviceOrientation.alpha = fallbackOrientation.alpha;
+          deviceOrientation.beta = fallbackOrientation.beta;
+          deviceOrientation.gamma = fallbackOrientation.gamma;
+        }
+      }
+    });
+
+    /******************************************************
      * BOTÓN: Solicitar Permiso de Orientación
      ******************************************************/
     requestPermissionBtn.addEventListener("click", async () => {
       const granted = await requestOrientationPermission();
       if (granted) {
         msgOverlay("Permiso de orientación concedido.");
-        // Ocultamos el botón de solicitar permiso y habilitamos "Comenzar"
         requestPermissionBtn.style.display = "none";
         startBtn.disabled = false;
       } else {
@@ -621,7 +667,7 @@
         video.srcObject = stream;
         await video.play();
 
-        // 2) Si aún no se solicitó permiso (en algunos navegadores ya está permitido), se agrega listener
+        // 2) Si el navegador no requiere requestPermission, ya tenemos permisos
         if (!window.DeviceOrientationEvent.requestPermission) {
           window.addEventListener("deviceorientation", handleOrientation);
         }
@@ -636,7 +682,7 @@
         createBackgroundStars();
         createVictimStars();
 
-        // 5) Activar la aplicación
+        // 5) Activar la app
         appActive = true;
 
         // 6) Estrellas fugaces
@@ -778,7 +824,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          // Sólo muestra el nombre si está muy cerca del centro (por ejemplo, < 80 px)
+          // Solo muestra el nombre si está muy cerca del centro (< 80px)
           if (dist < 80) {
             vs.nameTag.style.opacity = "1";
           } else {
@@ -822,7 +868,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       });
       ctx.restore();
 
-      // Determinar la estrella más cercana al centro para mostrar información en el panel
+      // Determinar la estrella más cercana al centro para mostrar info en el panel
       let closestStar = null;
       let minDist = Infinity;
       const centerX = window.innerWidth / 2;
@@ -864,31 +910,88 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     }
 
     /******************************************************
-     * ESTRELLAS FUGACES
+     * FALLBACK: DEVICEMOTION PARA GIROSCOPIO
      ******************************************************/
-    function createShootingStar() {
-      if (!appActive || calibrating) return;
-      const el = document.createElement("div");
-      el.className = "shooting-star";
-      const length = 50 + Math.random() * 100;
-      el.style.width = length + "px";
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * (window.innerHeight / 3);
-      el.style.left = x + "px";
-      el.style.top = y + "px";
-      const angle = ((Math.random() * 60 + 30) * Math.PI) / 180;
-      el.style.transform = `rotate(${angle}rad)`;
-      document.body.appendChild(el);
-      el.animate([
-        { opacity: 0, transform: `rotate(${angle}rad) translateX(0)` },
-        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
-        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
-        { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
-      ], {
-        duration: 1000 + Math.random() * 1000,
-        easing: "ease-in-out"
-      }).onfinish = () => el.remove();
-    }
+    window.addEventListener("devicemotion", (evt) => {
+      if (!lastMotionTimestamp) {
+        lastMotionTimestamp = evt.timeStamp;
+        return;
+      }
+      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
+      lastMotionTimestamp = evt.timeStamp;
+      // Si no se han recibido eventos de deviceorientation en 1 segundo, usar devicemotion
+      if (Date.now() - lastOrientationUpdate > 1000) {
+        const rr = evt.rotationRate;
+        if (rr) {
+          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
+          fallbackOrientation.beta += (rr.beta || 0) * dt;
+          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
+          deviceOrientation.alpha = fallbackOrientation.alpha;
+          deviceOrientation.beta = fallbackOrientation.beta;
+          deviceOrientation.gamma = fallbackOrientation.gamma;
+        }
+      }
+    });
+
+    /******************************************************
+     * BOTÓN: Solicitar Permiso de Orientación
+     ******************************************************/
+    requestPermissionBtn.addEventListener("click", async () => {
+      const granted = await requestOrientationPermission();
+      if (granted) {
+        msgOverlay("Permiso de orientación concedido.");
+        requestPermissionBtn.style.display = "none";
+        startBtn.disabled = false;
+      } else {
+        msgOverlay("Permiso de orientación denegado. Si ya lo rechazaste, borra los datos del sitio en Safari e inténtalo de nuevo.");
+      }
+    });
+
+    /******************************************************
+     * INICIAR APLICACIÓN
+     ******************************************************/
+    startBtn.addEventListener("click", async () => {
+      try {
+        // 1) Obtener cámara
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        await video.play();
+
+        // 2) Si no se usa requestPermission (Android), añadir listener de orientación
+        if (!window.DeviceOrientationEvent.requestPermission) {
+          window.addEventListener("deviceorientation", handleOrientation);
+        }
+
+        // 3) Ocultar panel de inicio y mostrar controles
+        startPanel.style.display = "none";
+        controls.style.display = "flex";
+
+        // 4) Ajustar canvas y crear estrellas
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+        createBackgroundStars();
+        createVictimStars();
+
+        // 5) Activar la aplicación
+        appActive = true;
+
+        // 6) Estrellas fugaces
+        setInterval(createShootingStar, 3000);
+
+        // 7) Calibración inicial
+        startCalibration();
+
+        // 8) Habilitar debug con doble click
+        document.addEventListener("dblclick", toggleDebug);
+
+        // 9) Iniciar bucle de actualización
+        requestAnimationFrame(updatePositions);
+
+      } catch (err) {
+        console.error("Error al iniciar:", err);
+        msgOverlay("Error al iniciar: " + err.message);
+      }
+    });
 
     /******************************************************
      * TOGGLE DEBUG
