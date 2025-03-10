@@ -420,8 +420,8 @@
     // Detectar si es iOS
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     // Multiplicadores para iOS (ajusta estos valores según lo que observes en el debug)
-    const factorX_iOS = 5.0; // Amplifica movimiento horizontal en iOS
-    const factorY_iOS = 5.0; // Amplifica movimiento vertical en iOS
+    const factorX_iOS = 5.0; // Amplifica el movimiento horizontal en iOS
+    const factorY_iOS = 5.0; // Amplifica el movimiento vertical en iOS
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -615,19 +615,18 @@
     function handleOrientation(evt) {
       if (!appActive) return;
       let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
-      // Si no es iOS, usamos evt.beta y evt.gamma de forma directa.
-      // En iOS, se han reportado problemas; por ello, intercambiamos beta y gamma.
+      // En iOS se ha reportado que los ejes pueden estar intercambiados.
       let vertical, horizontal;
       if (isiOS) {
-        vertical = evt.gamma || 0;       // para movimiento vertical en iOS
-        horizontal = evt.beta || 0;        // para movimiento horizontal en iOS
-        // Si se observa que se necesita invertir alguno, se puede ajustar aquí:
+        // Intercambiamos: usamos evt.gamma para vertical y evt.beta para horizontal.
+        vertical = evt.gamma || 0;
+        horizontal = evt.beta || 0;
+        // Si es necesario, invertir el horizontal:
         // horizontal = -horizontal;
       } else {
-        vertical = evt.beta || 0;          // para movimiento vertical (Android)
-        horizontal = evt.gamma || 0;       // para movimiento horizontal (Android)
+        vertical = evt.beta || 0;
+        horizontal = evt.gamma || 0;
       }
-      // No restamos 90 porque en portrait el dispositivo se sostiene vertical.
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = vertical;
       deviceOrientation.gamma = horizontal;
@@ -788,8 +787,8 @@
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       if (isiOS) {
-        // Para iOS: Mapeo fijo – se considera 180° como centro horizontal y 0° de altitud como centro vertical.
-        // Luego se suma el desplazamiento medido por los sensores.
+        // Para iOS: Mapeo "fijo": se considera 180° como centro horizontal y 0° de altitud como centro vertical.
+        // Luego se suma el desplazamiento medido.
         const x = centerX + ((azimuth - 180) / 180) * centerX + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
         const y = centerY - (altitude / 90) * centerY + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
         return { x, y, inView: true };
@@ -845,7 +844,7 @@ Calibration Offsets:
   Alpha: ${calibrationOffset.alpha.toFixed(1)}
   Vertical: ${calibrationOffset.altitude.toFixed(1)}
   Horizontal: ${calibrationOffset.gamma.toFixed(1)}
-Time since last update: ${((Date.now() - lastOrientationUpdate)/1000).toFixed(2)} s`;
+Time since last update: ${((Date.now() - lastOrientationUpdate) / 1000).toFixed(2)} s`;
     }
 
     /***** TOGGLE DEBUG (opcional) *****/
