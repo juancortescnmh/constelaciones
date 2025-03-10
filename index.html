@@ -2,17 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <!-- iOS Fullscreen -->
+  <!-- Para iOS y Android -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Constellations AR with GyroNorm</title>
-  <!-- Cargamos GyroNorm.js desde CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gyronorm/2.0.0/gyronorm.min.js"></script>
+  <title>Constellations AR con GyroNorm</title>
+  <!-- Cargamos GyroNorm.js (versión 2.0.1) desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gyronorm/2.0.1/gyronorm.min.js"></script>
   <style>
-    /* ------------------------------
-       Estilos globales y animaciones
-    ------------------------------ */
+    /* ============================
+       ANIMACIONES GLOBALES
+    ============================ */
     @keyframes cosmicGradient {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
@@ -30,9 +31,9 @@
       0% { opacity: 0; transform: translateY(10px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    /* ------------------------------
-       Reset y estilos base
-    ------------------------------ */
+    /* ============================
+       RESET Y ESTILO BASE
+    ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       overflow: hidden;
@@ -42,9 +43,9 @@
       touch-action: none;
       height: 100vh;
     }
-    /* ------------------------------
-       Cámara y fondo
-    ------------------------------ */
+    /* ============================
+       VIDEO / CÁMARA
+    ============================ */
     #video {
       position: fixed;
       top: 0; left: 0;
@@ -52,6 +53,9 @@
       object-fit: cover;
       z-index: 1;
     }
+    /* ============================
+       FONDO CÓSMICO
+    ============================ */
     #starfield {
       position: fixed;
       top: 0; left: 0;
@@ -63,6 +67,9 @@
       animation: cosmicGradient 25s ease infinite;
       opacity: 0.7;
     }
+    /* ============================
+       CANVAS PARA LÍNEAS
+    ============================ */
     #skyCanvas {
       position: fixed;
       top: 0; left: 0;
@@ -70,9 +77,9 @@
       z-index: 3;
       pointer-events: none;
     }
-    /* ------------------------------
-       Elementos DOM (estrellas, retícula, etc.)
-    ------------------------------ */
+    /* ============================
+       ESTRELLAS (DOM)
+    ============================ */
     .star {
       position: absolute;
       border-radius: 50%;
@@ -87,6 +94,9 @@
       box-shadow: 0 0 12px 2px rgba(255,255,255,0.7);
       animation: twinkle 2s infinite ease-in-out, starAppear 0.5s ease forwards;
     }
+    /* ============================
+       NOMBRES DE ESTRELLAS (Víctimas)
+    ============================ */
     .star-name {
       position: absolute;
       font-size: 13px;
@@ -101,6 +111,9 @@
       font-family: 'Avenir', sans-serif;
       letter-spacing: 0.3px;
     }
+    /* ============================
+       ESTRELLAS FUGACES
+    ============================ */
     .shooting-star {
       position: absolute;
       height: 2px;
@@ -110,6 +123,9 @@
       z-index: 5;
       box-shadow: 0 0 4px #fff;
     }
+    /* ============================
+       RETÍCULA CENTRAL
+    ============================ */
     .center-reticle {
       position: fixed;
       left: 50%; top: 50%;
@@ -134,9 +150,9 @@
       width: 100%; height: 2px;
       top: 50%; transform: translateY(-50%);
     }
-    /* ------------------------------
-       Paneles (Inicio, Calibración, Información)
-    ------------------------------ */
+    /* ============================
+       CONTROLES
+    ============================ */
     #controls {
       position: fixed;
       bottom: 20px; left: 0;
@@ -159,6 +175,9 @@
       font-family: 'Avenir', sans-serif;
     }
     .btn:hover { background: rgba(40,63,83,0.8); cursor: pointer; }
+    /* ============================
+       PANEL DE INFORMACIÓN
+    ============================ */
     #objectInfo {
       position: fixed;
       bottom: 80px; left: 50%;
@@ -183,6 +202,9 @@
       font-weight: 600;
       letter-spacing: 0.4px;
     }
+    /* ============================
+       PANEL DE INICIO
+    ============================ */
     #startPanel {
       position: fixed;
       top: 0; left: 0;
@@ -366,15 +388,15 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // Variables para la orientación (se actualizarán con GyroNorm)
+    // Variables de orientación que se actualizarán con GyroNorm
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     // Detectar si es iOS
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    // Multiplicadores para iOS (ajusta según lo que observes en el debug)
-    const factorX_iOS = 5.0; // Amplifica movimiento horizontal
-    const factorY_iOS = 5.0; // Amplifica movimiento vertical
+    // Multiplicadores para iOS: ajusta estos valores según lo que observes en el debug
+    const factorX_iOS = 5.0; // Amplifica el movimiento horizontal en iOS
+    const factorY_iOS = 5.0; // Amplifica el movimiento vertical en iOS
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -510,40 +532,37 @@
     }
 
     /***** GYRONORM INITIALIZATION *****/
-    // Usamos GyroNorm para obtener datos de giroscopio de forma unificada.
+    // Usamos GyroNorm para obtener datos del giroscopio de forma unificada.
     var gn = new GyroNorm();
     gn.init({
-        frequency: 50, // actualizaciones por segundo
-        orientationBase: GyroNorm.DIRECTION_SCREEN,
-        decimalDigits: 2,
-        logger: true
+      frequency: 50,              // Actualizaciones por segundo
+      orientationBase: GyroNorm.DIRECTION_SCREEN,
+      decimalDigits: 2,
+      logger: true
     }).then(function(){
-        // Inicia la captura de datos del giroscopio.
-        gn.start(function(data){
-            // data.do contiene alpha, beta, gamma
-            // Actualizamos deviceOrientation usando los datos de GyroNorm.
-            // Para dispositivos no iOS, usamos beta y gamma "directos".
-            // Para iOS, se ha reportado que a veces se deben intercambiar:
-            if (isiOS) {
-              // En este ejemplo, intercambiamos beta y gamma.
-              deviceOrientation.altitude = data.do.gamma; // Vertical
-              deviceOrientation.gamma = data.do.beta;       // Horizontal
-            } else {
-              deviceOrientation.altitude = data.do.beta;
-              deviceOrientation.gamma = data.do.gamma;
-            }
-            deviceOrientation.alpha = data.do.alpha;
-            lastOrientationUpdate = Date.now();
-            updateDebug();
-        });
+      // Inicia la captura de datos del giroscopio
+      gn.start(function(data){
+        // data.do contiene alpha, beta, gamma
+        if (isiOS) {
+          // En iOS, intercambiamos evt.beta y evt.gamma
+          deviceOrientation.altitude = data.do.gamma;
+          deviceOrientation.gamma = data.do.beta;
+        } else {
+          deviceOrientation.altitude = data.do.beta;
+          deviceOrientation.gamma = data.do.gamma;
+        }
+        deviceOrientation.alpha = data.do.alpha;
+        lastOrientationUpdate = Date.now();
+        updateDebug();
+      });
     }).catch(function(e){
-        console.error("GyroNorm init failed: ", e);
+      console.error("GyroNorm init failed: ", e);
+      msgOverlay("GyroNorm init failed. Consider hosting GyroNorm locally.");
     });
 
-    /***** CAMERA & APP START *****/
+    /***** START APP *****/
     startBtn.addEventListener("click", async () => {
       try {
-        // Forzar modo vertical.
         if (window.orientation !== 0) {
           msgOverlay("Please use the app in vertical (portrait) mode.");
           return;
@@ -703,8 +722,8 @@
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       if (isiOS) {
-        // Para iOS, usamos un mapeo fijo: se considera 180° como centro horizontal y 0° de altitud como centro vertical.
-        // Luego se suma el desplazamiento de los sensores.
+        // Para iOS: Mapeo fijo – se asume 180° como centro horizontal y 0° de altitud como centro vertical.
+        // Luego se suma el desplazamiento medido por los sensores.
         const x = centerX + ((azimuth - 180) / 180) * centerX + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
         const y = centerY - (altitude / 90) * centerY + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
         return { x, y, inView: true };
@@ -760,7 +779,7 @@ Calibration Offsets:
   Alpha: ${calibrationOffset.alpha.toFixed(1)}
   Vertical: ${calibrationOffset.altitude.toFixed(1)}
   Horizontal: ${calibrationOffset.gamma.toFixed(1)}
-Time since last update: ${((Date.now() - lastOrientationUpdate) / 1000).toFixed(2)} s`;
+Time since last update: ${((Date.now() - lastOrientationUpdate)/1000).toFixed(2)} s`;
     }
 
     /***** MSG OVERLAY *****/
