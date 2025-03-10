@@ -641,7 +641,7 @@
     });
     
     /******************************************************
-     * ORIENTACIÓN (con ajuste de ejes)
+     * ORIENTACIÓN (ajuste de ejes)
      ******************************************************/
     function handleOrientation(evt) {
       if (!appActive) return;
@@ -656,11 +656,11 @@
       let orientation = window.orientation || 0;
       let altitude, gamma;
       if (orientation === 90 || orientation === -90) {
-        // Landscape: se intercambian ejes
+        // Landscape: intercambiar ejes
         altitude = evt.gamma || 0;
         gamma = -(evt.beta || 0) + 90;
       } else {
-        // Portrait: invertir gamma para que se mueva en el sentido correcto
+        // Portrait: corregir ejes para que arriba/abajo funcione y horizontal se invierta
         altitude = (evt.beta || 0) - 90;
         gamma = -(evt.gamma || 0);
       }
@@ -869,7 +869,8 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       dAz = ((dAz + 540) % 360) - 180;
       const dAlt = altitude - alt;
       const fovFactor = 2.5;
-      const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
+      // Invertimos el signo en la componente horizontal para corregir el movimiento
+      const x = window.innerWidth / 2 - (dAz / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
       const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
