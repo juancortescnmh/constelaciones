@@ -12,9 +12,7 @@
   <style>
     @font-face {
       font-family: 'Avenir';
-      /* Si tienes acceso a un archivo local de Avenir, podrías enlazarlo aquí.
-         De lo contrario, el dispositivo usará Avenir si lo tiene instalado,
-         y sino caerá a un sans-serif de sistema. */
+      /* Puedes enlazar un archivo local o usar el instalado en el sistema */
       src: local('Avenir'), local('AvenirLTStd-Book'); 
     }
   </style>
@@ -44,9 +42,7 @@
     /* ============================
        RESETEO Y ESTILO BASE
     ============================ */
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       overflow: hidden;
       background: #000;
@@ -141,7 +137,7 @@
     }
 
     /* ============================
-       INDICADOR CENTRAL (retícula)
+       RETÍCULA CENTRAL
     ============================ */
     .center-reticle {
       position: fixed;
@@ -194,7 +190,7 @@
     }
 
     /* ============================
-       PANEL INFORMACIÓN
+       PANEL DE INFORMACIÓN
     ============================ */
     #objectInfo {
       position: fixed;
@@ -214,8 +210,11 @@
       font-family: 'Avenir', sans-serif;
     }
     #objectInfo h3 {
-      margin-bottom: 5px; color: #82b1ff; font-size: 18px;
-      font-weight: 600; letter-spacing: 0.4px;
+      margin-bottom: 5px;
+      color: #82b1ff;
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
     }
 
     /* ============================
@@ -225,37 +224,46 @@
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      text-align: center; padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
       z-index: 100;
-      background: linear-gradient(135deg,#01010f,#2a002b);
+      background: linear-gradient(135deg, #01010f, #2a002b);
       background-size: 400% 400%;
       animation: cosmicGradient 15s ease infinite;
     }
     #startPanel h1 {
-      margin-bottom: 30px; font-size: 28px; color: #fff;
+      margin-bottom: 30px;
+      font-size: 28px;
+      color: #fff;
       text-shadow: 0 2px 10px rgba(100,181,246,0.5), 0 0 10px rgba(255,255,255,0.3);
       animation: panelFadeIn 1s ease forwards;
       font-weight: 600;
       font-family: 'Avenir', sans-serif;
     }
     #startPanel p {
-      margin-bottom: 20px; color: #eee; font-size: 16px;
+      margin-bottom: 20px;
+      color: #eee;
+      font-size: 16px;
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
     #startBtn {
       padding: 12px 30px;
-      background: linear-gradient(135deg,#2962ff,#0039cb);
-      color: #fff; border: none; border-radius: 30px;
+      background: linear-gradient(135deg, #2962ff, #0039cb);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
       font-size: 18px;
       box-shadow: 0 4px 15px rgba(41,98,255,0.4);
       animation: panelFadeIn 1.2s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
     #startBtn:hover {
-      background: linear-gradient(135deg,#4591ff,#1c5cd9);
+      background: linear-gradient(135deg, #4591ff, #1c5cd9);
       cursor: pointer;
     }
 
@@ -267,45 +275,64 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.7);
-      display: none; flex-direction: column;
-      justify-content: center; align-items: center;
-      z-index: 50; text-align: center; padding: 20px;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      text-align: center;
+      padding: 20px;
     }
     #calibrationUI h2 {
-      margin-bottom: 20px; font-size: 24px;
+      margin-bottom: 20px;
+      font-size: 24px;
       animation: panelFadeIn 0.5s ease forwards;
       font-weight: 600;
       font-family: 'Avenir', sans-serif;
     }
     #calibrationUI p {
-      margin-bottom: 30px; max-width: 80%;
-      animation: panelFadeIn 0.7s ease forwards; color: #ddd;
+      margin-bottom: 30px;
+      max-width: 80%;
+      animation: panelFadeIn 0.7s ease forwards;
+      color: #ddd;
       font-family: 'Avenir', sans-serif;
     }
     #calibrationIndicator {
       width: 200px; height: 200px;
-      border-radius: 50%; border: 2px solid #82b1ff;
-      position: relative; margin-bottom: 40px;
+      border-radius: 50%;
+      border: 2px solid #82b1ff;
+      position: relative;
+      margin-bottom: 40px;
       animation: panelFadeIn 0.8s ease forwards;
     }
     #calibrationDot {
       width: 20px; height: 20px;
-      background-color: #2962ff; border-radius: 50%;
-      position: absolute; left: 50%; top: 50%;
+      background-color: #2962ff;
+      border-radius: 50%;
+      position: absolute;
+      left: 50%; top: 50%;
       transform: translate(-50%,-50%);
       box-shadow: 0 0 10px rgba(41,98,255,0.7);
     }
     #confirmCalibration {
-      padding: 10px 20px; background: #2962ff;
-      color: #fff; border: none; border-radius: 20px;
-      font-size: 16px; animation: panelFadeIn 1s ease forwards;
+      padding: 10px 20px;
+      background: #2962ff;
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
     #confirmCalibration:hover {
-      background: #1c47a8; cursor: pointer;
+      background: #1c47a8;
+      cursor: pointer;
     }
     #calibMsg {
-      margin-top: 10px; color: #ccc; font-size: 13px; transition: 0.3s ease;
+      margin-top: 10px;
+      color: #ccc;
+      font-size: 13px;
+      transition: 0.3s ease;
       font-family: 'Avenir', sans-serif;
     }
 
@@ -316,9 +343,13 @@
       position: fixed;
       top: 10px; left: 10px;
       background: rgba(0,0,0,0.7);
-      padding: 5px; border-radius: 5px;
-      font-size: 10px; max-width: 50%;
-      z-index: 100; display: none; white-space: pre;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 10px;
+      max-width: 50%;
+      z-index: 100;
+      display: none;
+      white-space: pre;
       font-family: 'Avenir', sans-serif;
     }
   </style>
@@ -353,8 +384,8 @@
     <h1>Constelaciones AR</h1>
     <p>
       Otorga permisos de cámara y sensores.<br/>
-      Presiona <strong>Comenzar</strong> <br/>
-      CNMH 2025
+      Presiona <strong>Comenzar</strong> para disfrutar.<br/>
+      (Si usas iPhone, asegúrate de tener activado "Motion & Orientation Access" en Ajustes > Safari).
     </p>
     <button id="startBtn">Comenzar</button>
   </div>
@@ -363,7 +394,7 @@
   <div id="calibrationUI">
     <h2>Calibración</h2>
     <p>
-      Apunta tu teléfono al frente y ajusta la bola azul<br/>
+      Apunta tu teléfono al frente y alinea la bola azul<br/>
       en el centro de la pantalla. Luego presiona Confirmar.
     </p>
     <div id="calibrationIndicator">
@@ -440,10 +471,10 @@
      ******************************************************/
     const BACKGROUND_STAR_COUNT = 400;
     let backgroundStars = [];
-    function createBackgroundStars() {
+    function createBackgroundStars(){
       starfield.innerHTML = "";
       backgroundStars = [];
-      for (let i = 0; i < BACKGROUND_STAR_COUNT; i++) {
+      for (let i = 0; i < BACKGROUND_STAR_COUNT; i++){
         const az = Math.random() * 360;
         const alt = (Math.asin(2 * Math.random() - 1) * 180) / Math.PI;
         const starEl = document.createElement("div");
@@ -462,36 +493,33 @@
      * ESTRELLAS DE VÍCTIMAS
      ******************************************************/
     let victimStars = [];
-    function createVictimStars() {
+    function createVictimStars(){
       victimStars = [];
-
-      // Distribución con distancia mínima para evitar amontonamiento
       const placedStars = [];
-      const minDistDeg = 10;
+      const minDistDeg = 10;  // distancia mínima en grados
       const attempts = 200;
-
       victimNames.forEach(name => {
         let placed = false;
-        for (let i = 0; i < attempts; i++) {
+        for (let i = 0; i < attempts; i++){
           let az = Math.random() * 360;
-          let alt = -60 + Math.random() * 120; // -60..+60
+          let alt = -60 + Math.random() * 120;
           let ok = true;
-          for (let st of placedStars) {
+          for (let st of placedStars){
             let dAz = az - st.azimuth;
             let dAlt = alt - st.altitude;
             let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-            if (dist < minDistDeg) {
+            if (dist < minDistDeg){
               ok = false;
               break;
             }
           }
-          if (ok) {
+          if (ok){
             placedStars.push({ azimuth: az, altitude: alt, name });
             placed = true;
             break;
           }
         }
-        if (!placed) {
+        if (!placed){
           console.log("No se pudo ubicar:", name);
         }
       });
@@ -530,9 +558,9 @@
       });
     }
 
-    // Conecta cada estrella con las 2 más cercanas (umbral menor para constelaciones más pequeñas)
-    function computeConnections() {
-      const threshold = 20; // Menor para conexiones más cortas
+    // Conecta cada estrella con las 2 más cercanas (umbral reducido para constelaciones más pequeñas)
+    function computeConnections(){
+      const threshold = 20;  // umbral en grados
       victimStars.forEach((star, i) => {
         let distances = [];
         victimStars.forEach((other, j) => {
@@ -543,59 +571,77 @@
           distances.push({ index: j, dist });
         });
         distances.sort((a, b) => a.dist - b.dist);
-        star.connections = distances.filter(d => d.dist < threshold)
-                                    .slice(0, 2)
-                                    .map(d => d.index);
+        star.connections = distances.filter(d => d.dist < threshold).slice(0, 2).map(d => d.index);
       });
     }
 
     /******************************************************
-     * INICIAR APP
+     * SOLICITAR PERMISO DE ORIENTACIÓN (GIROSCOPIO)
+     ******************************************************/
+    async function requestOrientationPermission() {
+      // Para iOS 13+ es necesario llamar a requestPermission() en un gesto de usuario.
+      if (typeof DeviceOrientationEvent !== "undefined" && 
+          typeof DeviceOrientationEvent.requestPermission === "function") {
+        try {
+          const response = await DeviceOrientationEvent.requestPermission();
+          if (response === "granted") {
+            return true;
+          } else {
+            return false;
+          }
+        } catch (error) {
+          console.error("Error al solicitar permiso de orientación:", error);
+          return false;
+        }
+      }
+      // En otros dispositivos, asumimos que ya está permitido.
+      return true;
+    }
+
+    /******************************************************
+     * INICIAR APLICACIÓN
      ******************************************************/
     startBtn.addEventListener("click", async () => {
       try {
-        // Solicitar cámara
+        // 1) Obtener cámara
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
         await video.play();
 
-        // Solicitar permisos de orientación según el dispositivo
-        if (typeof DeviceOrientationEvent !== "undefined" &&
-            typeof DeviceOrientationEvent.requestPermission === "function") {
-          try {
-            const response = await DeviceOrientationEvent.requestPermission();
-            if (response === "granted") {
-              window.addEventListener("deviceorientation", handleOrientation);
-            } else {
-              msgOverlay("Permiso de orientación denegado. La experiencia AR podría no funcionar correctamente.");
-            }
-          } catch (error) {
-            console.error("Error al pedir permiso de orientación:", error);
-          }
-        } else {
-          // Para otros dispositivos, simplemente agregamos el listener
-          window.addEventListener("deviceorientation", handleOrientation);
+        // 2) Solicitar permiso de orientación (giroscopio)
+        const permissionGranted = await requestOrientationPermission();
+        if (!permissionGranted) {
+          msgOverlay("Permiso de orientación denegado. Revisa Ajustes > Safari > Motion & Orientation Access.");
+          throw new Error("Permiso de orientación denegado");
         }
+        // Añadir listener de orientación
+        window.addEventListener("deviceorientation", handleOrientation);
 
+        // 3) Ocultar panel de inicio y mostrar controles
         startPanel.style.display = "none";
         controls.style.display = "flex";
 
+        // 4) Ajustar canvas y crear estrellas
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
-
         createBackgroundStars();
         createVictimStars();
 
+        // 5) Activar la aplicación
         appActive = true;
 
-        // Estrellas fugaces cada 3s
+        // 6) Estrellas fugaces
         setInterval(createShootingStar, 3000);
 
+        // 7) Calibración inicial
         startCalibration();
 
+        // 8) Habilitar debug (doble click)
         document.addEventListener("dblclick", toggleDebug);
 
+        // 9) Iniciar bucle de actualización
         requestAnimationFrame(updatePositions);
+
       } catch (err) {
         console.error("Error al iniciar:", err);
         msgOverlay("Error al iniciar: " + err.message);
@@ -668,7 +714,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
      ******************************************************/
     calibrateBtn.addEventListener("click", startCalibration);
     resetBtn.addEventListener("click", () => {
-      if (stream) stream.getTracks().forEach(t => t.stop());
+      if (stream) { stream.getTracks().forEach(t => t.stop()); }
       window.location.reload();
     });
 
@@ -689,9 +735,10 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         return;
       }
 
+      // Limpiar canvas de líneas
       ctx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
 
-      // Actualizar posiciones de las estrellas de fondo
+      // Actualizar estrellas de fondo
       backgroundStars.forEach(bs => {
         const pos = calculateScreenPosition(bs.azimuth, bs.altitude);
         if (pos.inView) {
@@ -707,7 +754,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         }
       });
 
-      // Actualizar posiciones de las estrellas de víctimas
+      // Actualizar estrellas de víctimas
       let visibleVictims = [];
       victimStars.forEach(vs => {
         const pos = calculateScreenPosition(vs.azimuth, vs.altitude);
@@ -718,16 +765,16 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           vs.element.style.opacity = "1";
           vs.element.style.transform = "scale(1)";
 
-          // Solo mostramos el nombre si la estrella está muy cerca del centro (por ejemplo, < 80 px)
+          // Calcular distancia al centro para mostrar nombre
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
+          // Solo mostrar nombre si < 80px del centro
           if (dist < 80) {
             vs.nameTag.style.opacity = "1";
           } else {
             vs.nameTag.style.opacity = "0";
           }
-
           vs.nameTag.style.left = pos.x + "px";
           vs.nameTag.style.top = (pos.y - vs.size / 2 - 5) + "px";
 
@@ -740,7 +787,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         }
       });
 
-      // Dibujar líneas entre estrellas de víctimas (solo si ambas están cerca y a < 120px en pantalla)
+      // Dibujar líneas con glow (solo entre estrellas cercanas)
       ctx.save();
       ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.lineWidth = 1.2;
@@ -754,8 +801,8 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           if (found) {
             const dx = v1.x - found.x;
             const dy = v1.y - found.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 120) {
+            const screenDist = Math.sqrt(dx * dx + dy * dy);
+            if (screenDist < 120) { // solo líneas cortas
               ctx.beginPath();
               ctx.moveTo(v1.x, v1.y);
               ctx.lineTo(found.x, found.y);
@@ -766,7 +813,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       });
       ctx.restore();
 
-      // Determinar la estrella más cercana al centro para el panel central (opcional)
+      // Determinar la estrella más cercana al centro para mostrar información
       let closestStar = null;
       let minDist = Infinity;
       const centerX = window.innerWidth / 2;
@@ -792,13 +839,13 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     }
 
     /******************************************************
-     * CALCULAR POSICIÓN EN PANTALLA (AR)
+     * CALCULAR POSICIÓN (AR)
      ******************************************************/
     function calculateScreenPosition(azimuth, altitude) {
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
       let dAz = azimuth - alpha;
-      dAz = ((dAz + 540) % 360) - 180;
+      dAz = ((dAz + 540) % 360) - 180; // Normalizar a -180..180
       const dAlt = altitude - alt;
       const fovFactor = 2.5;
       const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
@@ -843,12 +890,13 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     }
 
     /******************************************************
-     * MENSAJE OVERLAY
+     * MENSAJE OVERLAY (para avisos al usuario)
      ******************************************************/
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
-      d.style.top = "50%"; d.style.left = "50%";
+      d.style.top = "50%";
+      d.style.left = "50%";
       d.style.transform = "translate(-50%,-50%)";
       d.style.background = "rgba(0,0,0,0.8)";
       d.style.color = "#fff";
