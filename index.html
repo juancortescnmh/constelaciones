@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
   <title>Constellations AR</title>
 
-  <!-- Tipografía Avenir (usa Avenir si está instalada, sino fallback a sans-serif) -->
+  <!-- Tipografía Avenir (usa Avenir si está instalada, sino se usará sans-serif) -->
   <style>
     @font-face {
       font-family: 'Avenir';
@@ -56,10 +56,8 @@
     ============================ */
     #video {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       object-fit: cover;
       z-index: 1;
     }
@@ -69,10 +67,8 @@
     ============================ */
     #starfield {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 2;
       pointer-events: none;
       background: linear-gradient(120deg, #01010f, #090921, #0f0c29);
@@ -86,10 +82,8 @@
     ============================ */
     #skyCanvas {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       z-index: 3;
       pointer-events: none;
     }
@@ -148,11 +142,9 @@
     ============================ */
     .center-reticle {
       position: fixed;
-      left: 50%;
-      top: 50%;
+      left: 50%; top: 50%;
       transform: translate(-50%, -50%);
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border: 2px solid rgba(255,255,255,0.3);
       border-radius: 50%;
       pointer-events: none;
@@ -165,16 +157,12 @@
       background: rgba(255,255,255,0.3);
     }
     .center-reticle::before {
-      width: 2px;
-      height: 100%;
-      left: 50%;
-      transform: translateX(-50%);
+      width: 2px; height: 100%;
+      left: 50%; transform: translateX(-50%);
     }
     .center-reticle::after {
-      width: 100%;
-      height: 2px;
-      top: 50%;
-      transform: translateY(-50%);
+      width: 100%; height: 2px;
+      top: 50%; transform: translateY(-50%);
     }
 
     /* ============================
@@ -182,8 +170,7 @@
     ============================ */
     #controls {
       position: fixed;
-      bottom: 20px;
-      left: 0;
+      bottom: 20px; left: 0;
       width: 100%;
       z-index: 10;
       display: none;
@@ -209,8 +196,7 @@
     ============================ */
     #objectInfo {
       position: fixed;
-      bottom: 80px;
-      left: 50%;
+      bottom: 80px; left: 50%;
       transform: translateX(-50%);
       background: rgba(13,27,42,0.7);
       color: #fff;
@@ -238,10 +224,8 @@
     ============================ */
     #startPanel {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -297,10 +281,8 @@
     ============================ */
     #calibrationUI {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.7);
       display: none;
       flex-direction: column;
@@ -367,7 +349,7 @@
     }
 
     /* ============================
-       DEBUG PANEL (visible siempre)
+       DEBUG PANEL (siempre visible)
     ============================ */
     #debug {
       position: fixed;
@@ -427,7 +409,7 @@
     <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
-  <!-- Debug info (siempre visible) -->
+  <!-- Debug panel (siempre visible) -->
   <div id="debug"></div>
   <script>
     /***** STATE VARIABLES *****/
@@ -438,15 +420,15 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // En modo portrait, usamos evt.beta y evt.gamma directamente.
+    // En modo portrait usamos evt.beta y evt.gamma directamente.
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     // Detectar si es iOS
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    // Multiplicadores para iOS (ajusta estos valores según lo que veas en el log)
-    const factorX_iOS = 2.0; // Movimiento horizontal
-    const factorY_iOS = 2.0; // Movimiento vertical
+    // Multiplicadores para iOS (ajusta estos valores según lo que observes en el debug)
+    const factorX_iOS = 5.0;
+    const factorY_iOS = 5.0;
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -629,7 +611,6 @@
         appActive = true;
         setInterval(createShootingStar, 3000);
         startCalibration();
-        // Debug panel se actualiza en cada evento de orientación
         requestAnimationFrame(updatePositions);
       } catch (err) {
         console.error("Error starting app:", err);
@@ -641,10 +622,10 @@
     function handleOrientation(evt) {
       if (!appActive) return;
       let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
-      // In portrait mode: use evt.beta (minus 90) for vertical and evt.gamma for horizontal.
+      // In portrait: use evt.beta for vertical (minus 90) and evt.gamma for horizontal.
       let vertical = (evt.beta || 0) - 90;
       let horizontal = evt.gamma || 0;
-      // Para iOS, invertimos el valor horizontal para probar (ajusta según lo que observes)
+      // Para iOS, a veces evt.gamma no se actualiza; si es iOS, usamos el negativo (para probar)
       if (isiOS) {
         horizontal = -(evt.gamma || 0);
       }
@@ -652,7 +633,6 @@
       deviceOrientation.altitude = vertical;
       deviceOrientation.gamma = horizontal;
       lastOrientationUpdate = Date.now();
-      // Actualizamos el panel de debug visible
       updateDebug();
     }
 
@@ -667,9 +647,7 @@
           fallbackOrientation.alpha += (rr.alpha || 0) * dt;
           fallbackOrientation.beta += (rr.beta || 0) * dt;
           fallbackOrientation.gamma += (rr.gamma || 0) * dt;
-          deviceOrientation.alpha = fallbackOrientation.alpha;
-          deviceOrientation.beta = fallbackOrientation.beta;
-          deviceOrientation.gamma = fallbackOrientation.gamma;
+          // Nota: fallbackOrientation.beta se usa solo si deviceOrientation.altitude resulta 0.
           updateDebug();
         }
       }
@@ -812,13 +790,14 @@
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       if (isiOS) {
-        // Para iOS, usamos un mapeo "fijo": consideramos 180° como centro horizontal y 0° como centro vertical,
-        // y luego sumamos el desplazamiento de los sensores.
-        const x = centerX + ((azimuth - 180) / 180) * (window.innerWidth / 2) + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
-        const y = centerY - (altitude / 90) * (window.innerHeight / 2) + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
+        // Para iOS: Mapeo "fijo" – se considera 180° como centro horizontal y 0° de altitud como centro vertical.
+        // Se suma el desplazamiento que proviene de los sensores (fused a partir de deviceOrientation y fallback).
+        const effectiveGamma = (deviceOrientation.gamma !== 0 ? deviceOrientation.gamma : fallbackOrientation.gamma);
+        const effectiveAltitude = (deviceOrientation.altitude !== 0 ? deviceOrientation.altitude : fallbackOrientation.beta || 0);
+        const x = centerX + ((azimuth - 180) / 180) * centerX + (effectiveGamma - calibrationOffset.gamma) * factorX_iOS;
+        const y = centerY - (altitude / 90) * centerY + (effectiveAltitude - calibrationOffset.altitude) * factorY_iOS;
         return { x, y, inView: true };
       } else {
-        // Para otros dispositivos, usamos la diferencia entre el azimut del objeto y la orientación del usuario
         const userAlpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
         let dAz = azimuth - userAlpha;
         dAz = ((dAz + 540) % 360) - 180;
@@ -859,22 +838,25 @@
 
     /***** UPDATE DEBUG PANEL *****/
     function updateDebug() {
-      debugEl.innerText = 
-`Device Orientation:
+      debugEl.innerText =
+`[DEBUG]
+Device Orientation:
   Alpha: ${deviceOrientation.alpha.toFixed(1)}
-  Altitude (Beta-90): ${deviceOrientation.altitude.toFixed(1)}
+  Beta-90 (Altitude): ${deviceOrientation.altitude.toFixed(1)}
   Gamma: ${deviceOrientation.gamma.toFixed(1)}
+Fallback Orientation:
+  Gamma: ${fallbackOrientation.gamma.toFixed(1)}
 Calibration Offsets:
   Alpha: ${calibrationOffset.alpha.toFixed(1)}
   Altitude: ${calibrationOffset.altitude.toFixed(1)}
   Gamma: ${calibrationOffset.gamma.toFixed(1)}
-Time since last update: ${((Date.now() - lastOrientationUpdate)/1000).toFixed(2)} s`;
+Time since last update: ${((Date.now() - lastOrientationUpdate) / 1000).toFixed(2)} s`;
     }
 
     /***** TOGGLE DEBUG (opcional) *****/
     function toggleDebug() {
-      showDebug = !showDebug;
-      debugEl.style.display = showDebug ? "block" : "none";
+      // Puedes usar esta función para ocultar/mostrar el debug, pero aquí se deja visible.
+      debugEl.style.display = (debugEl.style.display === "none") ? "block" : "none";
     }
 
     /***** MSG OVERLAY *****/
