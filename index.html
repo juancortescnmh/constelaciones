@@ -367,21 +367,20 @@
     }
 
     /* ============================
-       DEBUG PANEL
+       DEBUG PANEL (visible siempre)
     ============================ */
     #debug {
       position: fixed;
       top: 10px;
       left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 5px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
       border-radius: 5px;
-      font-size: 10px;
-      max-width: 50%;
-      z-index: 100;
-      display: none;
+      font-size: 12px;
+      z-index: 110;
       white-space: pre;
       font-family: 'Avenir', sans-serif;
+      display: block;
     }
   </style>
 </head>
@@ -428,27 +427,26 @@
     <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
-  <!-- Debug info -->
+  <!-- Debug info (siempre visible) -->
   <div id="debug"></div>
   <script>
     /***** STATE VARIABLES *****/
     let appActive = false;
     let calibrating = false;
     let stream = null;
-    let showDebug = false;
     let lastOrientationUpdate = Date.now();
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // In portrait mode, we use evt.beta and evt.gamma directly.
+    // En modo portrait, usamos evt.beta y evt.gamma directamente.
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
-    // Detect if the device is iOS.
+    // Detectar si es iOS
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    // Multiplicadores para iOS (ajusta según tu dispositivo)
-    const factorX_iOS = 1; // para movimiento horizontal
-    const factorY_iOS = 1; // para movimiento vertical
+    // Multiplicadores para iOS (ajusta estos valores según lo que veas en el log)
+    const factorX_iOS = 2.0; // Movimiento horizontal
+    const factorY_iOS = 2.0; // Movimiento vertical
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -631,7 +629,7 @@
         appActive = true;
         setInterval(createShootingStar, 3000);
         startCalibration();
-        document.addEventListener("dblclick", toggleDebug);
+        // Debug panel se actualiza en cada evento de orientación
         requestAnimationFrame(updatePositions);
       } catch (err) {
         console.error("Error starting app:", err);
@@ -643,10 +641,10 @@
     function handleOrientation(evt) {
       if (!appActive) return;
       let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
-      // In portrait: use evt.beta (minus 90) for vertical and evt.gamma for horizontal.
+      // In portrait mode: use evt.beta (minus 90) for vertical and evt.gamma for horizontal.
       let vertical = (evt.beta || 0) - 90;
       let horizontal = evt.gamma || 0;
-      // For iOS, invert the horizontal value
+      // Para iOS, invertimos el valor horizontal para probar (ajusta según lo que observes)
       if (isiOS) {
         horizontal = -(evt.gamma || 0);
       }
@@ -654,15 +652,8 @@
       deviceOrientation.altitude = vertical;
       deviceOrientation.gamma = horizontal;
       lastOrientationUpdate = Date.now();
-      if (calibrating) updateCalibrationUI();
-      if (showDebug) {
-        debugEl.textContent = `
-Alpha: ${alpha.toFixed(1)}
-Vertical (Beta-90): ${vertical.toFixed(1)}
-Horizontal (Gamma): ${horizontal.toFixed(1)}
-Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altitude.toFixed(1)}
-        `;
-      }
+      // Actualizamos el panel de debug visible
+      updateDebug();
     }
 
     /***** FALLBACK: DEVICEMOTION *****/
@@ -679,6 +670,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           deviceOrientation.alpha = fallbackOrientation.alpha;
           deviceOrientation.beta = fallbackOrientation.beta;
           deviceOrientation.gamma = fallbackOrientation.gamma;
+          updateDebug();
         }
       }
     });
@@ -820,13 +812,13 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       if (isiOS) {
-        // Para iOS: usamos como base el valor del mapa de la estrella (azimuth y altitude) y le sumamos
-        // el desplazamiento del dispositivo.
-        // Se asume que 180° es el centro horizontal y 0° (o la altitud de la esfera) es el centro vertical.
+        // Para iOS, usamos un mapeo "fijo": consideramos 180° como centro horizontal y 0° como centro vertical,
+        // y luego sumamos el desplazamiento de los sensores.
         const x = centerX + ((azimuth - 180) / 180) * (window.innerWidth / 2) + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
         const y = centerY - (altitude / 90) * (window.innerHeight / 2) + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
         return { x, y, inView: true };
       } else {
+        // Para otros dispositivos, usamos la diferencia entre el azimut del objeto y la orientación del usuario
         const userAlpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
         let dAz = azimuth - userAlpha;
         dAz = ((dAz + 540) % 360) - 180;
@@ -834,7 +826,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         const fovFactorH = 2.0;
         const fovFactorV = 2.5;
         const x = centerX + ((dAz + (deviceOrientation.gamma - calibrationOffset.gamma)) / fovFactorH) * (window.innerWidth / 50);
-        const y = centerY - ((dAlt) / fovFactorV) * (window.innerHeight / 50);
+        const y = centerY - (dAlt / fovFactorV) * (window.innerHeight / 50);
         const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
         return { x, y, inView };
       }
@@ -865,7 +857,21 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       }).onfinish = () => el.remove();
     }
 
-    /***** TOGGLE DEBUG *****/
+    /***** UPDATE DEBUG PANEL *****/
+    function updateDebug() {
+      debugEl.innerText = 
+`Device Orientation:
+  Alpha: ${deviceOrientation.alpha.toFixed(1)}
+  Altitude (Beta-90): ${deviceOrientation.altitude.toFixed(1)}
+  Gamma: ${deviceOrientation.gamma.toFixed(1)}
+Calibration Offsets:
+  Alpha: ${calibrationOffset.alpha.toFixed(1)}
+  Altitude: ${calibrationOffset.altitude.toFixed(1)}
+  Gamma: ${calibrationOffset.gamma.toFixed(1)}
+Time since last update: ${((Date.now() - lastOrientationUpdate)/1000).toFixed(2)} s`;
+    }
+
+    /***** TOGGLE DEBUG (opcional) *****/
     function toggleDebug() {
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
