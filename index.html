@@ -250,7 +250,7 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Dos botones: uno para solicitar permiso y otro para iniciar */
+    /* Dos botones: solicitar permiso y comenzar */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -368,13 +368,13 @@
   <!-- Retícula central -->
   <div class="center-reticle"></div>
 
-  <!-- Controles (Calibrar, Reiniciar) -->
+  <!-- Controles -->
   <div id="controls">
     <button id="calibrateBtn" class="btn">Calibrar</button>
     <button id="resetBtn" class="btn">Reiniciar</button>
   </div>
 
-  <!-- Panel de información (estrella apuntada) -->
+  <!-- Panel de información -->
   <div id="objectInfo">
     <h3 id="objectName"></h3>
     <p id="objectDesc"></p>
@@ -592,11 +592,11 @@
     /******************************************************
      * BOTÓN: Solicitar Permiso de Orientación
      ******************************************************/
-    document.getElementById("requestPermissionBtn").addEventListener("click", async () => {
+    requestPermissionBtn.addEventListener("click", async () => {
       const granted = await requestOrientationPermission();
       if (granted) {
         msgOverlay("Permiso de orientación concedido.");
-        document.getElementById("requestPermissionBtn").style.display = "none";
+        requestPermissionBtn.style.display = "none";
         startBtn.disabled = false;
       } else {
         msgOverlay("Permiso de orientación denegado. Borra los datos del sitio en Safari e inténtalo de nuevo.");
@@ -613,7 +613,7 @@
         video.srcObject = stream;
         await video.play();
     
-        // Si no es iOS (o ya se solicitó permiso), añadimos listener de orientación
+        // Si el navegador no requiere requestPermission, añadir listener de orientación
         if (!window.DeviceOrientationEvent.requestPermission) {
           window.addEventListener("deviceorientation", handleOrientation);
         }
@@ -640,7 +640,7 @@
         msgOverlay("Error al iniciar: " + err.message);
       }
     });
-
+    
     /******************************************************
      * ORIENTACIÓN
      ******************************************************/
@@ -652,8 +652,19 @@
       } else {
         alpha = (360 - (evt.alpha || 0)) % 360;
       }
-      const altitude = (evt.beta || 0) - 90;
-      const gamma = evt.gamma || 0;
+    
+      // Detectar orientación del dispositivo (portrait vs landscape)
+      let orientation = window.orientation || 0;
+      let altitude, gamma;
+      if (orientation === 90 || orientation === -90) {
+        // En landscape, usamos evt.gamma para el eje vertical y evt.beta para horizontal (ajustando)
+        altitude = evt.gamma || 0;
+        gamma = (evt.beta || 0) - 90;
+      } else {
+        // En portrait, usar evt.beta para vertical (substraer 90) y evt.gamma para horizontal
+        altitude = (evt.beta || 0) - 90;
+        gamma = evt.gamma || 0;
+      }
     
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = altitude;
@@ -673,7 +684,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     }
     
     /******************************************************
-     * FALLBACK: DEVICEMOTION (actualizar giroscopio)
+     * FALLBACK: DEVICEMOTION PARA GIROSCOPIO
      ******************************************************/
     window.addEventListener("devicemotion", (evt) => {
       if (!lastMotionTimestamp) {
@@ -849,6 +860,9 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       requestAnimationFrame(updatePositions);
     }
     
+    /******************************************************
+     * CALCULAR POSICIÓN (AR)
+     ******************************************************/
     function calculateScreenPosition(azimuth, altitude) {
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
@@ -862,6 +876,9 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       return { x, y, inView };
     }
     
+    /******************************************************
+     * ESTRELLAS FUGACES
+     ******************************************************/
     function createShootingStar() {
       if (!appActive || calibrating) return;
       const el = document.createElement("div");
@@ -886,11 +903,17 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       }).onfinish = () => el.remove();
     }
     
+    /******************************************************
+     * TOGGLE DEBUG
+     ******************************************************/
     function toggleDebug() {
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
     }
     
+    /******************************************************
+     * MENSAJE OVERLAY (para avisar al usuario)
+     ******************************************************/
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
