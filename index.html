@@ -5,10 +5,7 @@
   <!-- iOS Fullscreen -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta
-    name="viewport"
-    content="width=device-width, maximum-scale=1.0, user-scalable=no"
-  />
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
   <title>Constelaciones AR</title>
 
   <!-- Tipografía Avenir (con fallback a sans-serif) -->
@@ -89,7 +86,8 @@
        CANVAS PARA LÍNEAS
     ============================ */
     #skyCanvas {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 3;
       pointer-events: none;
@@ -143,7 +141,7 @@
     }
 
     /* ============================
-       INDICADOR CENTRAL
+       INDICADOR CENTRAL (retícula)
     ============================ */
     .center-reticle {
       position: fixed;
@@ -224,7 +222,8 @@
        PANEL DE INICIO
     ============================ */
     #startPanel {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
@@ -264,7 +263,8 @@
        PANEL DE CALIBRACIÓN
     ============================ */
     #calibrationUI {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       background: rgba(0,0,0,0.7);
       display: none; flex-direction: column;
@@ -313,7 +313,8 @@
        DEBUG
     ============================ */
     #debug {
-      position: fixed; top: 10px; left: 10px;
+      position: fixed;
+      top: 10px; left: 10px;
       background: rgba(0,0,0,0.7);
       padding: 5px; border-radius: 5px;
       font-size: 10px; max-width: 50%;
@@ -384,8 +385,8 @@
     let stream = null;
     let showDebug = false;
 
-    let deviceOrientation = { alpha:0, altitude:0, gamma:0 };
-    let calibrationOffset = { alpha:0, altitude:0, gamma:0 };
+    let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
+    let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -437,22 +438,22 @@
     /******************************************************
      * ESTRELLAS DE FONDO
      ******************************************************/
-    const BACKGROUND_STAR_COUNT=400;
-    let backgroundStars=[];
-    function createBackgroundStars(){
-      starfield.innerHTML="";
-      backgroundStars=[];
-      for(let i=0; i<BACKGROUND_STAR_COUNT; i++){
-        const az=Math.random()*360;
-        const alt=(Math.asin(2*Math.random()-1)*180)/Math.PI; // -90..+90
-        const starEl=document.createElement("div");
-        starEl.className="star";
-        const size=Math.random()*2+1;
-        starEl.style.width=size+"px";
-        starEl.style.height=size+"px";
-        starEl.style.opacity=(Math.random()*0.7+0.3).toFixed(2);
-        if(Math.random()>0.9) starEl.classList.add("bright");
-        backgroundStars.push({ element:starEl, azimuth:az, altitude:alt });
+    const BACKGROUND_STAR_COUNT = 400;
+    let backgroundStars = [];
+    function createBackgroundStars() {
+      starfield.innerHTML = "";
+      backgroundStars = [];
+      for (let i = 0; i < BACKGROUND_STAR_COUNT; i++) {
+        const az = Math.random() * 360;
+        const alt = (Math.asin(2 * Math.random() - 1) * 180) / Math.PI;
+        const starEl = document.createElement("div");
+        starEl.className = "star";
+        const size = Math.random() * 2 + 1;
+        starEl.style.width = size + "px";
+        starEl.style.height = size + "px";
+        starEl.style.opacity = (Math.random() * 0.7 + 0.3).toFixed(2);
+        if (Math.random() > 0.9) starEl.classList.add("bright");
+        backgroundStars.push({ element: starEl, azimuth: az, altitude: alt });
         starfield.appendChild(starEl);
       }
     }
@@ -460,114 +461,124 @@
     /******************************************************
      * ESTRELLAS DE VÍCTIMAS
      ******************************************************/
-    let victimStars=[];
-    function createVictimStars(){
-      victimStars=[];
+    let victimStars = [];
+    function createVictimStars() {
+      victimStars = [];
 
-      // Distribución con distancia mínima
-      const placedStars=[];
-      const minDistDeg=10; // separa más las estrellas
-      const attempts=200;
+      // Distribución con distancia mínima para evitar amontonamiento
+      const placedStars = [];
+      const minDistDeg = 10;
+      const attempts = 200;
 
-      victimNames.forEach(name=>{
-        let placed=false;
-        for(let i=0;i<attempts;i++){
-          let az=Math.random()*360;
-          let alt=-60+Math.random()*120;
-          let ok=true;
-          for(let st of placedStars){
-            let dAz=az-st.azimuth;
-            let dAlt=alt-st.altitude;
-            let dist=Math.sqrt(dAz*dAz + dAlt*dAlt);
-            if(dist<minDistDeg){
-              ok=false; break;
+      victimNames.forEach(name => {
+        let placed = false;
+        for (let i = 0; i < attempts; i++) {
+          let az = Math.random() * 360;
+          let alt = -60 + Math.random() * 120; // -60..+60
+          let ok = true;
+          for (let st of placedStars) {
+            let dAz = az - st.azimuth;
+            let dAlt = alt - st.altitude;
+            let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
+            if (dist < minDistDeg) {
+              ok = false;
+              break;
             }
           }
-          if(ok){
-            placedStars.push({ azimuth:az, altitude:alt, name });
-            placed=true;
+          if (ok) {
+            placedStars.push({ azimuth: az, altitude: alt, name });
+            placed = true;
             break;
           }
         }
-        if(!placed){
-          console.log("No se pudo ubicar:",name);
+        if (!placed) {
+          console.log("No se pudo ubicar:", name);
         }
       });
 
-      placedStars.forEach(st=>{
-        const size=2+Math.random()*2;
-        const bright=Math.random()<0.3;
+      placedStars.forEach(st => {
+        const size = 2 + Math.random() * 2;
+        const bright = Math.random() < 0.3;
         victimStars.push({
-          name:st.name,
-          azimuth:st.azimuth,
-          altitude:st.altitude,
-          size:size,
-          bright:bright,
-          connections:[]
+          name: st.name,
+          azimuth: st.azimuth,
+          altitude: st.altitude,
+          size: size,
+          bright: bright,
+          connections: []
         });
       });
 
       computeConnections();
 
-      victimStars.forEach(st=>{
-        const starEl=document.createElement("div");
-        starEl.className="star";
-        starEl.style.width=st.size+"px";
-        starEl.style.height=st.size+"px";
-        if(st.bright) starEl.classList.add("bright");
+      victimStars.forEach(st => {
+        const starEl = document.createElement("div");
+        starEl.className = "star";
+        starEl.style.width = st.size + "px";
+        starEl.style.height = st.size + "px";
+        if (st.bright) starEl.classList.add("bright");
 
-        const nameEl=document.createElement("div");
-        nameEl.className="star-name";
-        nameEl.textContent=st.name;
+        const nameEl = document.createElement("div");
+        nameEl.className = "star-name";
+        nameEl.textContent = st.name;
 
         starfield.appendChild(starEl);
         starfield.appendChild(nameEl);
 
-        st.element=starEl;
-        st.nameTag=nameEl;
+        st.element = starEl;
+        st.nameTag = nameEl;
       });
     }
 
     // Conecta cada estrella con las 2 más cercanas (umbral menor para constelaciones más pequeñas)
-    function computeConnections(){
-      const threshold=20; // Menor => constelaciones más pequeñas
-      victimStars.forEach((star,i)=>{
-        let distances=[];
-        victimStars.forEach((other,j)=>{
-          if(i===j)return;
-          let dAz=star.azimuth-other.azimuth;
-          let dAlt=star.altitude-other.altitude;
-          let dist=Math.sqrt(dAz*dAz + dAlt*dAlt);
-          distances.push({ index:j, dist });
+    function computeConnections() {
+      const threshold = 20; // Menor para conexiones más cortas
+      victimStars.forEach((star, i) => {
+        let distances = [];
+        victimStars.forEach((other, j) => {
+          if (i === j) return;
+          let dAz = star.azimuth - other.azimuth;
+          let dAlt = star.altitude - other.altitude;
+          let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
+          distances.push({ index: j, dist });
         });
-        distances.sort((a,b)=>a.dist-b.dist);
-        star.connections=distances.filter(d=>d.dist<threshold).slice(0,2).map(d=>d.index);
+        distances.sort((a, b) => a.dist - b.dist);
+        star.connections = distances.filter(d => d.dist < threshold)
+                                    .slice(0, 2)
+                                    .map(d => d.index);
       });
     }
 
     /******************************************************
      * INICIAR APP
      ******************************************************/
-    startBtn.addEventListener("click", async ()=>{
-      try{
-        stream=await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }});
-        video.srcObject=stream;
+    startBtn.addEventListener("click", async () => {
+      try {
+        // Solicitar cámara
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
         await video.play();
 
-        // Permisos iOS
-        try{
-          if(typeof DeviceOrientationEvent!=="undefined" &&
-             typeof DeviceOrientationEvent.requestPermission==="function"){
-            const perm=await DeviceOrientationEvent.requestPermission();
-            if(perm!=="granted") throw new Error("Sensores denegados");
+        // Solicitar permisos de orientación según el dispositivo
+        if (typeof DeviceOrientationEvent !== "undefined" &&
+            typeof DeviceOrientationEvent.requestPermission === "function") {
+          try {
+            const response = await DeviceOrientationEvent.requestPermission();
+            if (response === "granted") {
+              window.addEventListener("deviceorientation", handleOrientation);
+            } else {
+              msgOverlay("Permiso de orientación denegado. La experiencia AR podría no funcionar correctamente.");
+            }
+          } catch (error) {
+            console.error("Error al pedir permiso de orientación:", error);
           }
+        } else {
+          // Para otros dispositivos, simplemente agregamos el listener
           window.addEventListener("deviceorientation", handleOrientation);
-        }catch(e){
-          console.log("Orientación error:",e);
         }
 
-        startPanel.style.display="none";
-        controls.style.display="flex";
+        startPanel.style.display = "none";
+        controls.style.display = "flex";
 
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
@@ -575,46 +586,43 @@
         createBackgroundStars();
         createVictimStars();
 
-        appActive=true;
+        appActive = true;
 
-        // Estrellas fugaces
-        setInterval(createShootingStar,3000);
+        // Estrellas fugaces cada 3s
+        setInterval(createShootingStar, 3000);
 
-        // Calibración inicial
         startCalibration();
 
-        // Debug con doble click
-        document.addEventListener("dblclick",toggleDebug);
+        document.addEventListener("dblclick", toggleDebug);
 
         requestAnimationFrame(updatePositions);
-
-      }catch(err){
-        console.error("Error al iniciar:",err);
-        msgOverlay("Error al iniciar: "+err.message);
+      } catch (err) {
+        console.error("Error al iniciar:", err);
+        msgOverlay("Error al iniciar: " + err.message);
       }
     });
 
     /******************************************************
      * ORIENTACIÓN
      ******************************************************/
-    function handleOrientation(evt){
-      if(!appActive)return;
+    function handleOrientation(evt) {
+      if (!appActive) return;
       let alpha;
-      if(typeof evt.webkitCompassHeading==="number"){
-        alpha=evt.webkitCompassHeading;
-      }else{
-        alpha=(360-(evt.alpha||0))%360;
+      if (typeof evt.webkitCompassHeading === "number") {
+        alpha = evt.webkitCompassHeading;
+      } else {
+        alpha = (360 - (evt.alpha || 0)) % 360;
       }
-      const altitude=(evt.beta||0)-90;
-      const gamma=(evt.gamma||0);
+      const altitude = (evt.beta || 0) - 90;
+      const gamma = evt.gamma || 0;
 
-      deviceOrientation.alpha=alpha;
-      deviceOrientation.altitude=altitude;
-      deviceOrientation.gamma=gamma;
+      deviceOrientation.alpha = alpha;
+      deviceOrientation.altitude = altitude;
+      deviceOrientation.gamma = gamma;
 
-      if(calibrating) updateCalibrationUI();
-      if(showDebug){
-        debugEl.textContent=`
+      if (calibrating) updateCalibrationUI();
+      if (showDebug) {
+        debugEl.textContent = `
 Alpha: ${alpha.toFixed(1)}
 Alt:   ${altitude.toFixed(1)}
 Gamma: ${gamma.toFixed(1)}
@@ -626,135 +634,131 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
     /******************************************************
      * CALIBRACIÓN
      ******************************************************/
-    function startCalibration(){
-      calibrating=true;
-      calibrationUI.style.display="flex";
-      controls.style.pointerEvents="none";
+    function startCalibration() {
+      calibrating = true;
+      calibrationUI.style.display = "flex";
+      controls.style.pointerEvents = "none";
       updateCalibrationUI();
     }
-    function updateCalibrationUI(){
-      const alt=deviceOrientation.altitude;
-      const g=deviceOrientation.gamma;
-      const rangeAlt=60, rangeG=60;
-      const limitedAlt=Math.max(-rangeAlt,Math.min(rangeAlt,alt));
-      const limitedG=Math.max(-rangeG,Math.min(rangeG,g));
-      const radius=80;
-      const x=(limitedG/rangeG)*radius;
-      const y=-(limitedAlt/rangeAlt)*radius;
-      calibrationDot.style.transform=`translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+    function updateCalibrationUI() {
+      const alt = deviceOrientation.altitude;
+      const g = deviceOrientation.gamma;
+      const rangeAlt = 60, rangeG = 60;
+      const limitedAlt = Math.max(-rangeAlt, Math.min(rangeAlt, alt));
+      const limitedG = Math.max(-rangeG, Math.min(rangeG, g));
+      const radius = 80;
+      const x = (limitedG / rangeG) * radius;
+      const y = -(limitedAlt / rangeAlt) * radius;
+      calibrationDot.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
     }
-    confirmCalibration.addEventListener("click",()=>{
-      calibrationOffset.alpha=deviceOrientation.alpha;
-      calibrationOffset.altitude=deviceOrientation.altitude;
-      calibrationOffset.gamma=deviceOrientation.gamma;
-      calibrationUI.style.display="none";
-      controls.style.pointerEvents="auto";
-      calibrating=false;
+    confirmCalibration.addEventListener("click", () => {
+      calibrationOffset.alpha = deviceOrientation.alpha;
+      calibrationOffset.altitude = deviceOrientation.altitude;
+      calibrationOffset.gamma = deviceOrientation.gamma;
+      calibrationUI.style.display = "none";
+      controls.style.pointerEvents = "auto";
+      calibrating = false;
       video.play();
-      calibMsg.textContent="¡Calibración completada!";
-      setTimeout(()=>calibMsg.textContent="",2000);
+      calibMsg.textContent = "¡Calibración completada!";
+      setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
 
     /******************************************************
      * REINICIAR
      ******************************************************/
     calibrateBtn.addEventListener("click", startCalibration);
-    resetBtn.addEventListener("click",()=>{
-      if(stream) stream.getTracks().forEach(t=>t.stop());
+    resetBtn.addEventListener("click", () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
       window.location.reload();
     });
 
     /******************************************************
      * AJUSTAR CANVAS
      ******************************************************/
-    function resizeCanvas(){
-      skyCanvas.width=window.innerWidth;
-      skyCanvas.height=window.innerHeight;
+    function resizeCanvas() {
+      skyCanvas.width = window.innerWidth;
+      skyCanvas.height = window.innerHeight;
     }
 
     /******************************************************
      * BUCLE DE ACTUALIZACIÓN
      ******************************************************/
-    function updatePositions(){
-      if(!appActive||calibrating){
+    function updatePositions() {
+      if (!appActive || calibrating) {
         requestAnimationFrame(updatePositions);
         return;
       }
 
-      // Limpiar canvas
-      ctx.clearRect(0,0, skyCanvas.width, skyCanvas.height);
+      ctx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
 
-      // Estrellas de fondo
-      backgroundStars.forEach(bs=>{
-        const pos=calculateScreenPosition(bs.azimuth,bs.altitude);
-        if(pos.inView){
-          bs.element.style.display="block";
-          bs.element.style.left=pos.x+"px";
-          bs.element.style.top=pos.y+"px";
-          bs.element.style.opacity="1";
-          bs.element.style.transform="scale(1)";
+      // Actualizar posiciones de las estrellas de fondo
+      backgroundStars.forEach(bs => {
+        const pos = calculateScreenPosition(bs.azimuth, bs.altitude);
+        if (pos.inView) {
+          bs.element.style.display = "block";
+          bs.element.style.left = pos.x + "px";
+          bs.element.style.top = pos.y + "px";
+          bs.element.style.opacity = "1";
+          bs.element.style.transform = "scale(1)";
         } else {
-          bs.element.style.display="none";
-          bs.element.style.opacity="0";
-          bs.element.style.transform="scale(0.5)";
+          bs.element.style.display = "none";
+          bs.element.style.opacity = "0";
+          bs.element.style.transform = "scale(0.5)";
         }
       });
 
-      // Víctimas
-      let visibleVictims=[];
-      victimStars.forEach(vs=>{
-        const pos=calculateScreenPosition(vs.azimuth,vs.altitude);
-        if(pos.inView){
-          vs.element.style.display="block";
-          vs.element.style.left=pos.x+"px";
-          vs.element.style.top=pos.y+"px";
-          vs.element.style.opacity="1";
-          vs.element.style.transform="scale(1)";
+      // Actualizar posiciones de las estrellas de víctimas
+      let visibleVictims = [];
+      victimStars.forEach(vs => {
+        const pos = calculateScreenPosition(vs.azimuth, vs.altitude);
+        if (pos.inView) {
+          vs.element.style.display = "block";
+          vs.element.style.left = pos.x + "px";
+          vs.element.style.top = pos.y + "px";
+          vs.element.style.opacity = "1";
+          vs.element.style.transform = "scale(1)";
 
-          // Distancia al centro para mostrar nombre
-          const dx=pos.x - window.innerWidth/2;
-          const dy=pos.y - window.innerHeight/2;
-          const dist=Math.sqrt(dx*dx+dy*dy);
-          // Solo mostramos el nombre si < 150 px
-          if(dist<80){
-            vs.nameTag.style.opacity="1";
+          // Solo mostramos el nombre si la estrella está muy cerca del centro (por ejemplo, < 80 px)
+          const dx = pos.x - window.innerWidth / 2;
+          const dy = pos.y - window.innerHeight / 2;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 80) {
+            vs.nameTag.style.opacity = "1";
           } else {
-            vs.nameTag.style.opacity="0";
+            vs.nameTag.style.opacity = "0";
           }
 
-          vs.nameTag.style.left=pos.x+"px";
-          vs.nameTag.style.top=(pos.y - vs.size/2 -5)+"px";
+          vs.nameTag.style.left = pos.x + "px";
+          vs.nameTag.style.top = (pos.y - vs.size / 2 - 5) + "px";
 
-          visibleVictims.push({ data:vs, x:pos.x, y:pos.y });
+          visibleVictims.push({ data: vs, x: pos.x, y: pos.y });
         } else {
-          vs.element.style.display="none";
-          vs.element.style.opacity="0";
-          vs.element.style.transform="scale(0.5)";
-          vs.nameTag.style.opacity="0";
+          vs.element.style.display = "none";
+          vs.element.style.opacity = "0";
+          vs.element.style.transform = "scale(0.5)";
+          vs.nameTag.style.opacity = "0";
         }
       });
 
-      // Dibujar líneas con glow
+      // Dibujar líneas entre estrellas de víctimas (solo si ambas están cerca y a < 120px en pantalla)
       ctx.save();
-      ctx.strokeStyle="rgba(255,255,255,0.7)";
-      ctx.lineWidth=1.2;
-      ctx.shadowColor="rgba(255,255,255,0.8)";
-      ctx.shadowBlur=12; // glow más visible
-
-      visibleVictims.forEach(v1=>{
-        let st=v1.data;
-        st.connections.forEach(cIdx=>{
-          let target=victimStars[cIdx];
-          let found=visibleVictims.find(v=>v.data===target);
-          if(found){
-            const dx=v1.x-found.x;
-            const dy=v1.y-found.y;
-            const dist=Math.sqrt(dx*dx+dy*dy);
-            // Menor a 120 px => línea
-            if(dist<120){
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = "rgba(255,255,255,0.8)";
+      ctx.shadowBlur = 12;
+      visibleVictims.forEach(v1 => {
+        let st = v1.data;
+        st.connections.forEach(cIdx => {
+          let target = victimStars[cIdx];
+          let found = visibleVictims.find(v => v.data === target);
+          if (found) {
+            const dx = v1.x - found.x;
+            const dy = v1.y - found.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
               ctx.beginPath();
-              ctx.moveTo(v1.x,v1.y);
-              ctx.lineTo(found.x,found.y);
+              ctx.moveTo(v1.x, v1.y);
+              ctx.lineTo(found.x, found.y);
               ctx.stroke();
             }
           }
@@ -762,99 +766,100 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       });
       ctx.restore();
 
-      // Estrella más cercana al centro
-      let closestStar=null; 
-      let minDist=Infinity;
-      const centerX=window.innerWidth/2, centerY=window.innerHeight/2;
-      visibleVictims.forEach(vv=>{
-        const dx=vv.x-centerX;
-        const dy=vv.y-centerY;
-        const dist=Math.sqrt(dx*dx+dy*dy);
-        if(dist<minDist && dist<60){
-          minDist=dist;
-          closestStar=vv.data;
+      // Determinar la estrella más cercana al centro para el panel central (opcional)
+      let closestStar = null;
+      let minDist = Infinity;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      visibleVictims.forEach(vv => {
+        const dx = vv.x - centerX;
+        const dy = vv.y - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDist && dist < 60) {
+          minDist = dist;
+          closestStar = vv.data;
         }
       });
-      if(closestStar){
-        objectName.textContent=closestStar.name;
-        objectDesc.textContent="Víctima de falsos positivos";
-        objectInfo.style.display="block";
+      if (closestStar) {
+        objectName.textContent = closestStar.name;
+        objectDesc.textContent = "Víctima de falsos positivos";
+        objectInfo.style.display = "block";
       } else {
-        objectInfo.style.display="none";
+        objectInfo.style.display = "none";
       }
 
       requestAnimationFrame(updatePositions);
     }
 
     /******************************************************
-     * CALCULAR POSICIÓN (AR)
+     * CALCULAR POSICIÓN EN PANTALLA (AR)
      ******************************************************/
-    function calculateScreenPosition(azimuth,altitude){
-      const alpha=(deviceOrientation.alpha - calibrationOffset.alpha+360)%360;
-      const alt=deviceOrientation.altitude - calibrationOffset.altitude;
-      let dAz=azimuth-alpha;
-      dAz=((dAz+540)%360)-180; // -180..180
-      const dAlt=altitude-alt;
-      const fovFactor=2.5;
-      const x=window.innerWidth/2 + (dAz/fovFactor)*(window.innerWidth/50);
-      const y=window.innerHeight/2 - (dAlt/fovFactor)*(window.innerHeight/50);
-      const inView=(Math.abs(dAz)<90 && Math.abs(dAlt)<70);
+    function calculateScreenPosition(azimuth, altitude) {
+      const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
+      const alt = deviceOrientation.altitude - calibrationOffset.altitude;
+      let dAz = azimuth - alpha;
+      dAz = ((dAz + 540) % 360) - 180;
+      const dAlt = altitude - alt;
+      const fovFactor = 2.5;
+      const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
+      const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
+      const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
     }
 
     /******************************************************
      * ESTRELLAS FUGACES
      ******************************************************/
-    function createShootingStar(){
-      if(!appActive||calibrating)return;
-      const el=document.createElement("div");
-      el.className="shooting-star";
-      const length=50+Math.random()*100;
-      el.style.width=length+"px";
-      const x=Math.random()*window.innerWidth;
-      const y=Math.random()*(window.innerHeight/3);
-      el.style.left=x+"px";
-      el.style.top=y+"px";
-      const angle=((Math.random()*60+30)*Math.PI)/180;
-      el.style.transform=`rotate(${angle}rad)`;
+    function createShootingStar() {
+      if (!appActive || calibrating) return;
+      const el = document.createElement("div");
+      el.className = "shooting-star";
+      const length = 50 + Math.random() * 100;
+      el.style.width = length + "px";
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * (window.innerHeight / 3);
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      const angle = ((Math.random() * 60 + 30) * Math.PI) / 180;
+      el.style.transform = `rotate(${angle}rad)`;
       document.body.appendChild(el);
       el.animate([
-        {opacity:0, transform:`rotate(${angle}rad) translateX(0)`},
-        {opacity:1, transform:`rotate(${angle}rad) translateX(${length*0.3}px)`},
-        {opacity:1, transform:`rotate(${angle}rad) translateX(${length*0.7}px)`},
-        {opacity:0, transform:`rotate(${angle}rad) translateX(${length}px)`}
+        { opacity: 0, transform: `rotate(${angle}rad) translateX(0)` },
+        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
+        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
+        { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
       ], {
-        duration:1000+Math.random()*1000,
-        easing:"ease-in-out"
-      }).onfinish=()=>el.remove();
+        duration: 1000 + Math.random() * 1000,
+        easing: "ease-in-out"
+      }).onfinish = () => el.remove();
     }
 
     /******************************************************
      * TOGGLE DEBUG
      ******************************************************/
-    function toggleDebug(){
-      showDebug=!showDebug;
-      debugEl.style.display=showDebug?"block":"none";
+    function toggleDebug() {
+      showDebug = !showDebug;
+      debugEl.style.display = showDebug ? "block" : "none";
     }
 
     /******************************************************
      * MENSAJE OVERLAY
      ******************************************************/
-    function msgOverlay(txt){
-      const d=document.createElement("div");
-      d.style.position="fixed";
-      d.style.top="50%"; d.style.left="50%";
-      d.style.transform="translate(-50%,-50%)";
-      d.style.background="rgba(0,0,0,0.8)";
-      d.style.color="#fff";
-      d.style.padding="20px";
-      d.style.borderRadius="10px";
-      d.style.zIndex="999";
-      d.style.maxWidth="80%";
-      d.style.textAlign="center";
-      d.innerHTML=txt;
+    function msgOverlay(txt) {
+      const d = document.createElement("div");
+      d.style.position = "fixed";
+      d.style.top = "50%"; d.style.left = "50%";
+      d.style.transform = "translate(-50%,-50%)";
+      d.style.background = "rgba(0,0,0,0.8)";
+      d.style.color = "#fff";
+      d.style.padding = "20px";
+      d.style.borderRadius = "10px";
+      d.style.zIndex = "999";
+      d.style.maxWidth = "80%";
+      d.style.textAlign = "center";
+      d.innerHTML = txt;
       document.body.appendChild(d);
-      setTimeout(()=>d.remove(),4000);
+      setTimeout(() => { d.remove(); }, 4000);
     }
   </script>
 </body>
