@@ -250,7 +250,7 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Dos botones: solicitar permiso y comenzar */
+    /* Dos botones: Solicitar permiso y Comenzar */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -613,7 +613,6 @@
         video.srcObject = stream;
         await video.play();
     
-        // Si el navegador no requiere requestPermission, añadir listener de orientación
         if (!window.DeviceOrientationEvent.requestPermission) {
           window.addEventListener("deviceorientation", handleOrientation);
         }
@@ -642,7 +641,7 @@
     });
     
     /******************************************************
-     * ORIENTACIÓN
+     * ORIENTACIÓN (con ajuste de ejes)
      ******************************************************/
     function handleOrientation(evt) {
       if (!appActive) return;
@@ -653,17 +652,17 @@
         alpha = (360 - (evt.alpha || 0)) % 360;
       }
     
-      // Detectar orientación del dispositivo (portrait vs landscape)
+      // Detectar la orientación (portrait vs. landscape)
       let orientation = window.orientation || 0;
       let altitude, gamma;
       if (orientation === 90 || orientation === -90) {
-        // En landscape, usamos evt.gamma para el eje vertical y evt.beta para horizontal (ajustando)
+        // Landscape: se intercambian ejes
         altitude = evt.gamma || 0;
-        gamma = (evt.beta || 0) - 90;
+        gamma = -(evt.beta || 0) + 90;
       } else {
-        // En portrait, usar evt.beta para vertical (substraer 90) y evt.gamma para horizontal
+        // Portrait: invertir gamma para que se mueva en el sentido correcto
         altitude = (evt.beta || 0) - 90;
-        gamma = evt.gamma || 0;
+        gamma = -(evt.gamma || 0);
       }
     
       deviceOrientation.alpha = alpha;
