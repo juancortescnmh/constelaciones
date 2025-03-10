@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
   <title>Constelaciones AR</title>
 
-  <!-- Tipografía Avenir (si está instalada, sino fallback a sans-serif) -->
+  <!-- Tipografía Avenir (usa Avenir si está instalada, sino fallback a sans-serif) -->
   <style>
     @font-face {
       font-family: 'Avenir';
@@ -39,7 +39,7 @@
     }
 
     /* ============================
-       RESETEO Y ESTILO BASE
+       RESET Y ESTILO BASE
     ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -250,7 +250,8 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    #startBtn {
+    /* Agregamos dos botones: uno para solicitar permiso y otro para iniciar */
+    #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
       color: #fff;
@@ -260,8 +261,13 @@
       box-shadow: 0 4px 15px rgba(41,98,255,0.4);
       animation: panelFadeIn 1.2s ease forwards;
       font-family: 'Avenir', sans-serif;
+      margin: 5px;
     }
-    #startBtn:hover {
+    #startBtn:disabled {
+      background: rgba(13,27,42,0.7);
+      cursor: not-allowed;
+    }
+    #requestPermissionBtn:hover, #startBtn:hover {
       background: linear-gradient(135deg, #4591ff, #1c5cd9);
       cursor: pointer;
     }
@@ -374,15 +380,16 @@
     <p id="objectDesc"></p>
   </div>
 
-  <!-- Panel de inicio -->
+  <!-- Panel de inicio con dos botones -->
   <div id="startPanel">
     <h1>Constelaciones AR</h1>
     <p>
       Otorga permisos de cámara y sensores.<br/>
-      Presiona <strong>Comenzar</strong> para disfrutar.<br/>
-      (Si usas iPhone, asegúrate de que Safari tenga activado el acceso a orientación o, si ya lo rechazaste, borra los datos del sitio).
+      Primero, haz clic en <strong>Solicitar Permiso de Orientación</strong>.<br/>
+      Luego presiona <strong>Comenzar</strong> para disfrutar.
     </p>
-    <button id="startBtn">Comenzar</button>
+    <button id="requestPermissionBtn">Solicitar Permiso de Orientación</button>
+    <button id="startBtn" disabled>Comenzar</button>
   </div>
 
   <!-- Panel de calibración -->
@@ -420,6 +427,7 @@
     const ctx = skyCanvas.getContext("2d");
 
     const startPanel = document.getElementById("startPanel");
+    const requestPermissionBtn = document.getElementById("requestPermissionBtn");
     const startBtn = document.getElementById("startBtn");
     const controls = document.getElementById("controls");
     const calibrateBtn = document.getElementById("calibrateBtn");
@@ -577,7 +585,7 @@
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
-          // Esta llamada debe realizarse en respuesta directa a un gesto de usuario
+          // Esta llamada se hace en respuesta directa al clic del usuario
           const response = await DeviceOrientationEvent.requestPermission();
           return response === "granted";
         } catch (error) {
@@ -585,8 +593,23 @@
           return false;
         }
       }
-      return true; // Otros navegadores no requieren esto
+      return true;
     }
+
+    /******************************************************
+     * BOTÓN: Solicitar Permiso de Orientación
+     ******************************************************/
+    requestPermissionBtn.addEventListener("click", async () => {
+      const granted = await requestOrientationPermission();
+      if (granted) {
+        msgOverlay("Permiso de orientación concedido.");
+        // Ocultamos el botón de solicitar permiso y habilitamos "Comenzar"
+        requestPermissionBtn.style.display = "none";
+        startBtn.disabled = false;
+      } else {
+        msgOverlay("Permiso de orientación denegado. Si ya lo rechazaste, borra los datos del sitio en Safari e inténtalo de nuevo.");
+      }
+    });
 
     /******************************************************
      * INICIAR APLICACIÓN
@@ -598,13 +621,10 @@
         video.srcObject = stream;
         await video.play();
 
-        // 2) Solicitar permiso de orientación (giroscopio)
-        const permissionGranted = await requestOrientationPermission();
-        if (!permissionGranted) {
-          msgOverlay("Permiso de orientación denegado. Si ya lo rechazaste, borra los datos del sitio en Safari.");
-          throw new Error("Permiso de orientación denegado");
+        // 2) Si aún no se solicitó permiso (en algunos navegadores ya está permitido), se agrega listener
+        if (!window.DeviceOrientationEvent.requestPermission) {
+          window.addEventListener("deviceorientation", handleOrientation);
         }
-        window.addEventListener("deviceorientation", handleOrientation);
 
         // 3) Ocultar panel de inicio y mostrar controles
         startPanel.style.display = "none";
@@ -616,7 +636,7 @@
         createBackgroundStars();
         createVictimStars();
 
-        // 5) Activar la app
+        // 5) Activar la aplicación
         appActive = true;
 
         // 6) Estrellas fugaces
@@ -791,7 +811,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
             const dx = v1.x - found.x;
             const dy = v1.y - found.y;
             const screenDist = Math.sqrt(dx * dx + dy * dy);
-            if (screenDist < 120) { // solo dibuja líneas cortas
+            if (screenDist < 120) {
               ctx.beginPath();
               ctx.moveTo(v1.x, v1.y);
               ctx.lineTo(found.x, found.y);
@@ -802,7 +822,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       });
       ctx.restore();
 
-      // Determinar la estrella más cercana al centro para mostrar info en el panel
+      // Determinar la estrella más cercana al centro para mostrar información en el panel
       let closestStar = null;
       let minDist = Infinity;
       const centerX = window.innerWidth / 2;
