@@ -659,6 +659,63 @@
       50% { transform: rotate(90deg); }
       100% { transform: rotate(0deg); }
     }
+    
+    /* ============================
+       AJUSTES DE SENSIBILIDAD 
+    ============================ */
+    #sensibilityPanel {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(13,27,42,0.9);
+      border: 1px solid rgba(100,149,237,0.4);
+      border-radius: 12px;
+      padding: 20px;
+      width: 300px;
+      max-width: 90%;
+      z-index: 90;
+      display: none;
+      backdrop-filter: blur(10px);
+      animation: panelFadeIn 0.5s ease forwards;
+    }
+    #sensibilityPanel h3 {
+      margin-bottom: 15px;
+      color: #82b1ff;
+      font-size: 18px;
+      text-align: center;
+    }
+    .slider-container {
+      margin-bottom: 15px;
+    }
+    .slider-container label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #eee;
+    }
+    .slider-container input {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .value-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #ccc;
+    }
+    #sensibilityPanel button {
+      background: #2962ff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 15px;
+      margin-top: 10px;
+      width: 100%;
+      cursor: pointer;
+    }
+    #sensibilityPanel button:hover {
+      background: #1c47a8;
+    }
   </style>
 </head>
 <body>
@@ -673,6 +730,7 @@
   <!-- Controles -->
   <div id="controls">
     <button id="calibrateBtn" class="btn">Calibrar</button>
+    <button id="sensibilityBtn" class="btn">Sensibilidad</button>
     <button id="resetBtn" class="btn">Reiniciar</button>
     <button id="debugToggleBtn" class="btn">Debug</button>
   </div>
@@ -705,6 +763,38 @@
     <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
+  <!-- Panel de sensibilidad -->
+  <div id="sensibilityPanel">
+    <h3>Ajustes de Sensibilidad</h3>
+    <div class="slider-container">
+      <label for="horizSensSlider">Sensibilidad Horizontal:</label>
+      <input type="range" min="0.5" max="5" step="0.1" value="1.0" id="horizSensSlider">
+      <div class="value-display">
+        <span>Baja</span>
+        <span id="horizSensValue">1.0</span>
+        <span>Alta</span>
+      </div>
+    </div>
+    <div class="slider-container">
+      <label for="vertSensSlider">Sensibilidad Vertical:</label>
+      <input type="range" min="0.5" max="5" step="0.1" value="1.0" id="vertSensSlider">
+      <div class="value-display">
+        <span>Baja</span>
+        <span id="vertSensValue">1.0</span>
+        <span>Alta</span>
+      </div>
+    </div>
+    <div class="slider-container">
+      <label for="smoothingSlider">Suavizado:</label>
+      <input type="range" min="0" max="0.95" step="0.05" value="0.7" id="smoothingSlider">
+      <div class="value-display">
+        <span>Ninguno</span>
+        <span id="smoothingValue">0.7</span>
+        <span>Máximo</span>
+      </div>
+    </div>
+    <button id="closeSettingsBtn">Guardar Cambios</button>
+  </div>
   <!-- Advertencia de orientación -->
   <div id="orientationWarning">
     <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
@@ -717,6 +807,7 @@
   </div>
   <!-- Debug info -->
   <div id="debug"></div>
+  
   <script>
     // Ejecutar init() cuando el DOM esté cargado
     document.addEventListener("DOMContentLoaded", init);
@@ -730,7 +821,16 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
     let gn = null; // GyroNorm instance
-
+    
+    // Ajustes de movimiento
+    let smoothingFactor = 0.7; // Nivel de suavizado (0-0.95)
+    let horizontalSensitivity = 1.0; // Sensibilidad horizontal
+    let verticalSensitivity = 1.0; // Sensibilidad vertical
+    
+    // Valores para suavizado
+    let smoothedOrientation = { alpha: 0, altitude: 0, gamma: 0 };
+    let lastRawOrientation = { alpha: 0, altitude: 0, gamma: 0 };
+    
     // Propiedades de orientación del dispositivo
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
@@ -752,6 +852,7 @@
     const calibrateBtn = document.getElementById("calibrateBtn");
     const resetBtn = document.getElementById("resetBtn");
     const debugToggleBtn = document.getElementById("debugToggleBtn");
+    const sensibilityBtn = document.getElementById("sensibilityBtn");
 
     const objectInfo = document.getElementById("objectInfo");
     const objectName = document.getElementById("objectName");
@@ -763,6 +864,16 @@
     const debugEl = document.getElementById("debug");
     const calibMsg = document.getElementById("calibMsg");
     const orientationWarning = document.getElementById("orientationWarning");
+    
+    // Referencias al panel de sensibilidad
+    const sensibilityPanel = document.getElementById("sensibilityPanel");
+    const horizSensSlider = document.getElementById("horizSensSlider");
+    const vertSensSlider = document.getElementById("vertSensSlider");
+    const smoothingSlider = document.getElementById("smoothingSlider");
+    const horizSensValue = document.getElementById("horizSensValue");
+    const vertSensValue = document.getElementById("vertSensValue");
+    const smoothingValue = document.getElementById("smoothingValue");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 
     /***** LISTA DE NOMBRES (Víctimas) *****/
     const victimNames = [
@@ -787,7 +898,7 @@
       "Victor Enrique Carpintero Manjares", "Wilmar Antonio Serrano Quintero", "Alberto de Jesús Aragón Aragón",
       "Jesús Emilio Márquez Gutiérrez", "Jesús Javier Suárez Caro", "Isidoro de Jesús Cardona", "Isaías Rueda Cardona"
     ];
-    
+
     /***** INICIALIZACIÓN *****/
     function init() {
       // Mostrar información sobre el entorno
@@ -807,11 +918,15 @@
       // Inicializar GyroNorm
       initGyroNorm();
       
+      // Configurar eventos del panel de sensibilidad
+      setupSensibilityPanel();
+      
       // Comprobar orientación
       checkOrientation();
       
       // Configurar oyentes de eventos
       debugToggleBtn.addEventListener("click", toggleDebug);
+      sensibilityBtn.addEventListener("click", toggleSensibilityPanel);
       
       // Si la pantalla cambia de orientación
       window.addEventListener('orientationchange', checkOrientation);
@@ -822,6 +937,47 @@
         document.addEventListener('touchmove', function(e) {
           if (!calibrating) e.preventDefault();
         }, { passive: false });
+      }
+    }
+
+    /***** CONFIGURAR PANEL DE SENSIBILIDAD *****/
+    function setupSensibilityPanel() {
+      // Inicializar valores
+      horizSensSlider.value = horizontalSensitivity;
+      vertSensSlider.value = verticalSensitivity;
+      smoothingSlider.value = smoothingFactor;
+      
+      horizSensValue.textContent = horizontalSensitivity.toFixed(1);
+      vertSensValue.textContent = verticalSensitivity.toFixed(1);
+      smoothingValue.textContent = smoothingFactor.toFixed(2);
+      
+      // Configurar eventos
+      horizSensSlider.addEventListener('input', function() {
+        horizontalSensitivity = parseFloat(this.value);
+        horizSensValue.textContent = horizontalSensitivity.toFixed(1);
+      });
+      
+      vertSensSlider.addEventListener('input', function() {
+        verticalSensitivity = parseFloat(this.value);
+        vertSensValue.textContent = verticalSensitivity.toFixed(1);
+      });
+      
+      smoothingSlider.addEventListener('input', function() {
+        smoothingFactor = parseFloat(this.value);
+        smoothingValue.textContent = smoothingFactor.toFixed(2);
+      });
+      
+      closeSettingsBtn.addEventListener('click', function() {
+        sensibilityPanel.style.display = 'none';
+      });
+    }
+
+    /***** MOSTRAR/OCULTAR PANEL DE SENSIBILIDAD *****/
+    function toggleSensibilityPanel() {
+      if (sensibilityPanel.style.display === 'block') {
+        sensibilityPanel.style.display = 'none';
+      } else {
+        sensibilityPanel.style.display = 'block';
       }
     }
 
@@ -1034,19 +1190,17 @@
             // Si GyroNorm está funcionando correctamente, usarlo
             if (gn) {
               gn.start(function(data) {
-                // Actualizar orientación del dispositivo desde GyroNorm
-                deviceOrientation.alpha = data.do.alpha;
-                deviceOrientation.altitude = data.do.beta - 90; // Ajuste vertical
-                deviceOrientation.gamma = data.do.gamma;
+                // Procesar datos de GyroNorm con suavizado
+                processOrientationData(data.do.alpha, data.do.beta - 90, data.do.gamma);
                 
                 if (showDebug) {
                   debugEl.textContent = `
                     Alpha: ${deviceOrientation.alpha.toFixed(1)}°
-                    Altitude (Beta-90): ${deviceOrientation.altitude.toFixed(1)}°
+                    Altitude: ${deviceOrientation.altitude.toFixed(1)}°
                     Gamma: ${deviceOrientation.gamma.toFixed(1)}°
+                    Sens H: ${horizontalSensitivity.toFixed(1)} V: ${verticalSensitivity.toFixed(1)}
+                    Smooth: ${smoothingFactor.toFixed(2)}
                     Offsets => A:${calibrationOffset.alpha.toFixed(1)}° Alt:${calibrationOffset.altitude.toFixed(1)}°
-                    Device: ${isIOS ? 'iOS' : 'Android/Other'}
-                    Orientation: ${window.orientation || 'undefined'}
                     Using: GyroNorm
                   `;
                 }
@@ -1068,6 +1222,51 @@
       }
     });
 
+    /***** PROCESAR DATOS DE ORIENTACIÓN *****/
+    function processOrientationData(alpha, altitude, gamma) {
+      // Ajustar con sensibilidad configurada
+      const alphaDiff = ((alpha - lastRawOrientation.alpha + 540) % 360) - 180;
+      const altitudeDiff = altitude - lastRawOrientation.altitude;
+      const gammaDiff = gamma - lastRawOrientation.gamma;
+      
+      // Aplicar factores de sensibilidad
+      const adjustedAlpha = lastRawOrientation.alpha + alphaDiff * horizontalSensitivity;
+      const adjustedAltitude = lastRawOrientation.altitude + altitudeDiff * verticalSensitivity;
+      const adjustedGamma = lastRawOrientation.gamma + gammaDiff * horizontalSensitivity;
+      
+      // Guardar los valores actuales como los anteriores para la próxima iteración
+      lastRawOrientation.alpha = alpha;
+      lastRawOrientation.altitude = altitude;
+      lastRawOrientation.gamma = gamma;
+      
+      // Aplicar suavizado
+      if (smoothingFactor > 0) {
+        // Inicializar valores suavizados si es la primera vez
+        if (smoothedOrientation.alpha === 0) {
+          smoothedOrientation.alpha = adjustedAlpha;
+          smoothedOrientation.altitude = adjustedAltitude;
+          smoothedOrientation.gamma = adjustedGamma;
+        } else {
+          // Aplicar suavizado exponencial
+          smoothedOrientation.alpha = smoothedOrientation.alpha * smoothingFactor + adjustedAlpha * (1 - smoothingFactor);
+          smoothedOrientation.altitude = smoothedOrientation.altitude * smoothingFactor + adjustedAltitude * (1 - smoothingFactor);
+          smoothedOrientation.gamma = smoothedOrientation.gamma * smoothingFactor + adjustedGamma * (1 - smoothingFactor);
+        }
+        
+        // Actualizar la orientación del dispositivo con valores suavizados
+        deviceOrientation.alpha = smoothedOrientation.alpha;
+        deviceOrientation.altitude = smoothedOrientation.altitude;
+        deviceOrientation.gamma = smoothedOrientation.gamma;
+      } else {
+        // Sin suavizado, usar valores ajustados directamente
+        deviceOrientation.alpha = adjustedAlpha;
+        deviceOrientation.altitude = adjustedAltitude;
+        deviceOrientation.gamma = adjustedGamma;
+      }
+      
+      lastOrientationUpdate = Date.now();
+    }
+
     /***** HANDLERS DE ORIENTACIÓN Y MOVIMIENTO (FALLBACK) *****/
     function handleOrientation(evt) {
       if (!appActive && !calibrating) return;
@@ -1083,37 +1282,29 @@
         
         // Si la pantalla está en modo portrait
         if (window.orientation === 0 || window.orientation === 180) {
-          deviceOrientation.alpha = (360 - alpha) % 360;
-          deviceOrientation.altitude = beta - 90; // Ajuste vertical
-          deviceOrientation.gamma = gamma;
+          processOrientationData((360 - alpha) % 360, beta - 90, gamma);
         } 
         // Si la pantalla está en landscape
         else {
           const adjustedGamma = window.orientation === 90 ? gamma : -gamma;
-          deviceOrientation.alpha = (360 - alpha) % 360;
-          deviceOrientation.altitude = adjustedGamma;
-          deviceOrientation.gamma = window.orientation === 90 ? beta : -beta;
+          processOrientationData((360 - alpha) % 360, adjustedGamma, window.orientation === 90 ? beta : -beta);
         }
       } else {
         // Para dispositivos Android y otros
-        deviceOrientation.alpha = (360 - (evt.alpha || 0)) % 360;
-        deviceOrientation.altitude = (evt.beta || 0) - 90;
-        deviceOrientation.gamma = evt.gamma || 0;
+        processOrientationData((360 - (evt.alpha || 0)) % 360, (evt.beta || 0) - 90, evt.gamma || 0);
       }
-      
-      lastOrientationUpdate = Date.now();
       
       if (calibrating) updateCalibrationUI();
       
       if (showDebug) {
         debugEl.textContent = `
           Alpha: ${deviceOrientation.alpha.toFixed(1)}°
-          Altitude (Beta-90): ${deviceOrientation.altitude.toFixed(1)}°
+          Altitude: ${deviceOrientation.altitude.toFixed(1)}°
           Gamma: ${deviceOrientation.gamma.toFixed(1)}°
+          Sens H: ${horizontalSensitivity.toFixed(1)} V: ${verticalSensitivity.toFixed(1)}
+          Smooth: ${smoothingFactor.toFixed(2)}
           Offsets => A:${calibrationOffset.alpha.toFixed(1)}° Alt:${calibrationOffset.altitude.toFixed(1)}°
           Device: ${isIOS ? 'iOS' : 'Android/Other'}
-          Orientation: ${window.orientation || 'undefined'}
-          Last Update: ${new Date(lastOrientationUpdate).toLocaleTimeString()}
           Using: Native events
         `;
       }
@@ -1140,10 +1331,12 @@
           fallbackOrientation.beta = Math.max(-180, Math.min(180, fallbackOrientation.beta + (rr.beta || 0) * dt));
           fallbackOrientation.gamma = Math.max(-90, Math.min(90, fallbackOrientation.gamma + (rr.gamma || 0) * dt));
           
-          // Aplicar a orientación del dispositivo
-          deviceOrientation.alpha = fallbackOrientation.alpha;
-          deviceOrientation.altitude = fallbackOrientation.beta - 90;
-          deviceOrientation.gamma = fallbackOrientation.gamma;
+          // Aplicar a orientación del dispositivo a través de la función de procesamiento
+          processOrientationData(
+            fallbackOrientation.alpha,
+            fallbackOrientation.beta - 90,
+            fallbackOrientation.gamma
+          );
           
           if (showDebug) {
             debugEl.textContent += "\n[FALLBACK] Usando datos de acelerómetro";
@@ -1157,6 +1350,14 @@
       calibrating = true;
       calibrationUI.style.display = "flex";
       controls.style.pointerEvents = "none";
+      
+      // Reiniciar valores de suavizado para calibración más precisa
+      smoothedOrientation = { 
+        alpha: deviceOrientation.alpha, 
+        altitude: deviceOrientation.altitude, 
+        gamma: deviceOrientation.gamma 
+      };
+      
       updateCalibrationUI();
     }
     
@@ -1213,6 +1414,9 @@
           isIOS: ${isIOS}
           isSafari: ${isSafari}
           Orientación: ${window.orientation || 'undefined'}
+          Sensibilidad H: ${horizontalSensitivity.toFixed(1)}
+          Sensibilidad V: ${verticalSensitivity.toFixed(1)}
+          Suavizado: ${smoothingFactor.toFixed(2)}
           User Agent: ${navigator.userAgent.substring(0, 50)}...
         `;
       }
@@ -1231,11 +1435,11 @@
       
       const dAlt = altitude - alt;
       
-      // Ajusta el factor FOV para mejor experiencia en iOS
-      const fovFactor = isIOS ? 2.0 : 2.5;
+      // Ajusta el factor FOV para mejor experiencia
+      const fovFactor = isIOS ? 2.2 : 2.7;
       
       // Calcula posición en pantalla con corrección de inclinación (gamma)
-      const x = window.innerWidth / 2 + ((dAz + gamma * 0.8) / fovFactor) * (window.innerWidth / 50);
+      const x = window.innerWidth / 2 + ((dAz + gamma * 0.5) / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
       
       // Define cuándo un elemento está en el campo de visión
@@ -1381,6 +1585,9 @@
       d.innerHTML = txt;
       document.body.appendChild(d);
       setTimeout(() => { 
+        d.style.opacity = "0";
+        d.style.transition = "opacity 0.5s ease";
+        setTimeout(() => { 
         d.style.opacity = "0";
         d.style.transition = "opacity 0.5s ease";
         setTimeout(() => d.remove(), 500);
