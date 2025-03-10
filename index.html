@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
-  <title>Constelaciones AR</title>
+  <title>Constellations AR</title>
 
   <!-- Tipografía Avenir (usa Avenir si está instalada, sino fallback a sans-serif) -->
   <style>
@@ -39,7 +39,7 @@
     }
 
     /* ============================
-       RESETEO Y ESTILO BASE
+       RESET Y ESTILO BASE
     ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -56,8 +56,10 @@
     ============================ */
     #video {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       z-index: 1;
     }
@@ -67,8 +69,10 @@
     ============================ */
     #starfield {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       z-index: 2;
       pointer-events: none;
       background: linear-gradient(120deg, #01010f, #090921, #0f0c29);
@@ -82,8 +86,10 @@
     ============================ */
     #skyCanvas {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       z-index: 3;
       pointer-events: none;
     }
@@ -106,7 +112,9 @@
       animation: twinkle 2s infinite ease-in-out, starAppear 0.5s ease forwards;
     }
 
-    /* Nombres de estrellas (víctimas) */
+    /* ============================
+       NOMBRES DE ESTRELLAS (Víctimas)
+    ============================ */
     .star-name {
       position: absolute;
       font-size: 13px;
@@ -140,26 +148,33 @@
     ============================ */
     .center-reticle {
       position: fixed;
-      left: 50%; top: 50%;
+      left: 50%;
+      top: 50%;
       transform: translate(-50%, -50%);
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border: 2px solid rgba(255,255,255,0.3);
       border-radius: 50%;
       pointer-events: none;
       z-index: 20;
     }
-    .center-reticle::before, .center-reticle::after {
+    .center-reticle::before,
+    .center-reticle::after {
       content: "";
       position: absolute;
       background: rgba(255,255,255,0.3);
     }
     .center-reticle::before {
-      width: 2px; height: 100%;
-      left: 50%; transform: translateX(-50%);
+      width: 2px;
+      height: 100%;
+      left: 50%;
+      transform: translateX(-50%);
     }
     .center-reticle::after {
-      width: 100%; height: 2px;
-      top: 50%; transform: translateY(-50%);
+      width: 100%;
+      height: 2px;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     /* ============================
@@ -167,9 +182,13 @@
     ============================ */
     #controls {
       position: fixed;
-      bottom: 20px; left: 0;
-      width: 100%; z-index: 10;
-      display: none; justify-content: center; gap: 10px;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      z-index: 10;
+      display: none;
+      justify-content: center;
+      gap: 10px;
       animation: panelFadeIn 0.8s ease forwards;
     }
     .btn {
@@ -190,7 +209,8 @@
     ============================ */
     #objectInfo {
       position: fixed;
-      bottom: 80px; left: 50%;
+      bottom: 80px;
+      left: 50%;
       transform: translateX(-50%);
       background: rgba(13,27,42,0.7);
       color: #fff;
@@ -218,8 +238,10 @@
     ============================ */
     #startPanel {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -235,7 +257,8 @@
       margin-bottom: 30px;
       font-size: 28px;
       color: #fff;
-      text-shadow: 0 2px 10px rgba(100,181,246,0.5), 0 0 10px rgba(255,255,255,0.3);
+      text-shadow: 0 2px 10px rgba(100,181,246,0.5),
+                   0 0 10px rgba(255,255,255,0.3);
       animation: panelFadeIn 1s ease forwards;
       font-weight: 600;
       font-family: 'Avenir', sans-serif;
@@ -247,7 +270,7 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Botones en el panel de inicio */
+    /* Botones del panel de inicio */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -274,8 +297,10 @@
     ============================ */
     #calibrationUI {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0,0,0,0.7);
       display: none;
       flex-direction: column;
@@ -300,15 +325,22 @@
       font-family: 'Avenir', sans-serif;
     }
     #calibrationIndicator {
-      width: 200px; height: 200px;
-      border-radius: 50%; border: 2px solid #82b1ff;
-      position: relative; margin-bottom: 40px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 2px solid #82b1ff;
+      position: relative;
+      margin-bottom: 40px;
       animation: panelFadeIn 0.8s ease forwards;
     }
     #calibrationDot {
-      width: 20px; height: 20px;
-      background-color: #2962ff; border-radius: 50%;
-      position: absolute; left: 50%; top: 50%;
+      width: 20px;
+      height: 20px;
+      background-color: #2962ff;
+      border-radius: 50%;
+      position: absolute;
+      left: 50%;
+      top: 50%;
       transform: translate(-50%,-50%);
       box-shadow: 0 0 10px rgba(41,98,255,0.7);
     }
@@ -335,11 +367,12 @@
     }
 
     /* ============================
-       DEBUG
+       DEBUG PANEL
     ============================ */
     #debug {
       position: fixed;
-      top: 10px; left: 10px;
+      top: 10px;
+      left: 10px;
       background: rgba(0,0,0,0.7);
       padding: 5px;
       border-radius: 5px;
@@ -363,8 +396,8 @@
   <div class="center-reticle"></div>
   <!-- Controles -->
   <div id="controls">
-    <button id="calibrateBtn" class="btn">Calibrar</button>
-    <button id="resetBtn" class="btn">Reiniciar</button>
+    <button id="calibrateBtn" class="btn">Calibrate</button>
+    <button id="resetBtn" class="btn">Reset</button>
   </div>
   <!-- Panel de información -->
   <div id="objectInfo">
@@ -373,9 +406,9 @@
   </div>
   <!-- Panel de inicio -->
   <div id="startPanel">
-    <h1>Constelaciones AR</h1>
+    <h1>Constellations AR</h1>
     <p>
-      Use the app in vertical mode.<br/>
+      Use the app in vertical (portrait) mode.<br/>
       First, click <strong>Request Orientation Permission</strong>.<br/>
       Then click <strong>Start</strong> to begin.
     </p>
@@ -398,7 +431,7 @@
   <!-- Debug info -->
   <div id="debug"></div>
   <script>
-    /***** VARIABLES DE ESTADO *****/
+    /***** STATE VARIABLES *****/
     let appActive = false;
     let calibrating = false;
     let stream = null;
@@ -407,9 +440,15 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // En portrait, usaremos evt.beta y evt.gamma directamente.
+    // In portrait mode, we use evt.beta and evt.gamma directly.
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
+
+    // Detect if the device is iOS.
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // Multiplicadores para iOS (ajusta según tu dispositivo)
+    const factorX_iOS = 1; // para movimiento horizontal
+    const factorY_iOS = 1; // para movimiento vertical
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -433,7 +472,7 @@
     const debugEl = document.getElementById("debug");
     const calibMsg = document.getElementById("calibMsg");
 
-    /***** LISTA DE NOMBRES (Víctimas) *****/
+    /***** VICTIM NAMES *****/
     const victimNames = [
       "Saín Álvarez", "Jorge Eliécer García Claro", "Ariel Jaime Arias", "Ramiro Blanco Rubio",
       "Miguel Ángel Carrascal Toro", "Dioselino Durán Pérez", "Guillermo Reyes Aponte", "Alejandro Chocó Cáceres",
@@ -457,7 +496,7 @@
       "Jesús Emilio Márquez Gutiérrez", "Jesús Javier Suárez Caro", "Isidoro de Jesús Cardona", "Isaías Rueda Cardona"
     ];
 
-    /***** ESTRELLAS DE FONDO *****/
+    /***** BACKGROUND STARS *****/
     const BACKGROUND_STAR_COUNT = 400;
     let backgroundStarsArr = [];
     function createBackgroundStars(){
@@ -478,7 +517,7 @@
       }
     }
 
-    /***** ESTRELLAS DE VÍCTIMAS *****/
+    /***** VICTIM STARS *****/
     let victimStars = [];
     function createVictimStars(){
       victimStars = [];
@@ -495,11 +534,11 @@
             let dAz = az - st.azimuth;
             let dAlt = alt - st.altitude;
             let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-            if (dist < minDistDeg){ ok = false; break; }
+            if (dist < minDistDeg) { ok = false; break; }
           }
-          if (ok){ placedStars.push({ azimuth: az, altitude: alt, name }); placed = true; break; }
+          if (ok) { placedStars.push({ azimuth: az, altitude: alt, name }); placed = true; break; }
         }
-        if (!placed) { console.log("No se pudo ubicar:", name); }
+        if (!placed) { console.log("Could not place:", name); }
       });
       placedStars.forEach(st => {
         const size = 2 + Math.random() * 2;
@@ -545,7 +584,7 @@
       });
     }
 
-    /***** SOLICITAR PERMISO DE ORIENTACIÓN *****/
+    /***** REQUEST ORIENTATION PERMISSION *****/
     async function requestOrientationPermission() {
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
@@ -553,7 +592,7 @@
           const response = await DeviceOrientationEvent.requestPermission();
           return response === "granted";
         } catch (error) {
-          console.error("Error al solicitar permiso:", error);
+          console.error("Error requesting orientation permission:", error);
           return false;
         }
       }
@@ -570,7 +609,7 @@
       }
     });
 
-    /***** INICIAR APLICACIÓN *****/
+    /***** START APP *****/
     startBtn.addEventListener("click", async () => {
       try {
         if (window.orientation !== 0) {
@@ -600,13 +639,17 @@
       }
     });
 
-    /***** ORIENTATION HANDLER (Portrait Mode) *****/
+    /***** ORIENTATION HANDLER (PORTRAIT MODE) *****/
     function handleOrientation(evt) {
       if (!appActive) return;
       let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
-      // En portrait, usamos evt.beta (restado 90) para vertical y evt.gamma para horizontal
+      // In portrait: use evt.beta (minus 90) for vertical and evt.gamma for horizontal.
       let vertical = (evt.beta || 0) - 90;
       let horizontal = evt.gamma || 0;
+      // For iOS, invert the horizontal value
+      if (isiOS) {
+        horizontal = -(evt.gamma || 0);
+      }
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = vertical;
       deviceOrientation.gamma = horizontal;
@@ -772,22 +815,32 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       requestAnimationFrame(updatePositions);
     }
 
-    /***** CALCULAR POSICIÓN (AR) *****/
+    /***** CALCULATE SCREEN POSITION *****/
     function calculateScreenPosition(azimuth, altitude) {
-      const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
-      const alt = deviceOrientation.altitude - calibrationOffset.altitude;
-      let dAz = azimuth - alpha;
-      dAz = ((dAz + 540) % 360) - 180;
-      const dAlt = altitude - alt;
-      const fovFactor = 2.5;
-      // En portrait, usamos dAz y deviceOrientation.gamma para el eje horizontal
-      const x = window.innerWidth / 2 + ((dAz + deviceOrientation.gamma - calibrationOffset.gamma) / fovFactor) * (window.innerWidth / 50);
-      const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
-      const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
-      return { x, y, inView };
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      if (isiOS) {
+        // Para iOS: usamos como base el valor del mapa de la estrella (azimuth y altitude) y le sumamos
+        // el desplazamiento del dispositivo.
+        // Se asume que 180° es el centro horizontal y 0° (o la altitud de la esfera) es el centro vertical.
+        const x = centerX + ((azimuth - 180) / 180) * (window.innerWidth / 2) + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
+        const y = centerY - (altitude / 90) * (window.innerHeight / 2) + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
+        return { x, y, inView: true };
+      } else {
+        const userAlpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
+        let dAz = azimuth - userAlpha;
+        dAz = ((dAz + 540) % 360) - 180;
+        const dAlt = altitude - (deviceOrientation.altitude - calibrationOffset.altitude);
+        const fovFactorH = 2.0;
+        const fovFactorV = 2.5;
+        const x = centerX + ((dAz + (deviceOrientation.gamma - calibrationOffset.gamma)) / fovFactorH) * (window.innerWidth / 50);
+        const y = centerY - ((dAlt) / fovFactorV) * (window.innerHeight / 50);
+        const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
+        return { x, y, inView };
+      }
     }
 
-    /***** ESTRELLAS FUGACES *****/
+    /***** SHOOTING STAR *****/
     function createShootingStar() {
       if (!appActive || calibrating) return;
       const el = document.createElement("div");
@@ -806,7 +859,10 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
         { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
         { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
-      ], { duration: 1000 + Math.random() * 1000, easing: "ease-in-out" }).onfinish = () => el.remove();
+      ], {
+        duration: 1000 + Math.random() * 1000,
+        easing: "ease-in-out"
+      }).onfinish = () => el.remove();
     }
 
     /***** TOGGLE DEBUG *****/
@@ -815,7 +871,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       debugEl.style.display = showDebug ? "block" : "none";
     }
 
-    /***** MENSAJE OVERLAY *****/
+    /***** MSG OVERLAY *****/
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
