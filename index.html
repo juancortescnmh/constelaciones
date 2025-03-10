@@ -41,9 +41,7 @@
     /* ============================
        RESETEO Y ESTILO BASE
     ============================ */
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       overflow: hidden;
       background: #000;
@@ -364,7 +362,7 @@
   <!-- Retícula central -->
   <div class="center-reticle"></div>
 
-  <!-- Controles -->
+  <!-- Controles (Calibrar, Reiniciar) -->
   <div id="controls">
     <button id="calibrateBtn" class="btn">Calibrar</button>
     <button id="resetBtn" class="btn">Reiniciar</button>
@@ -382,7 +380,7 @@
     <p>
       Otorga permisos de cámara y sensores.<br/>
       Presiona <strong>Comenzar</strong> para disfrutar.<br/>
-      (Si usas iPhone, asegúrate de que Safari tenga activado el acceso a orientación, o borra los datos del sitio si ya lo rechazaste).
+      (Si usas iPhone, asegúrate de que Safari tenga activado el acceso a orientación o, si ya lo rechazaste, borra los datos del sitio).
     </p>
     <button id="startBtn">Comenzar</button>
   </div>
@@ -493,7 +491,7 @@
     function createVictimStars(){
       victimStars = [];
       const placedStars = [];
-      const minDistDeg = 10;  // distancia mínima en grados
+      const minDistDeg = 10;
       const attempts = 200;
       victimNames.forEach(name => {
         let placed = false;
@@ -579,20 +577,15 @@
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
-          // Esta llamada debe realizarse en respuesta a un gesto de usuario
+          // Esta llamada debe realizarse en respuesta directa a un gesto de usuario
           const response = await DeviceOrientationEvent.requestPermission();
-          if (response === "granted") {
-            return true;
-          } else {
-            return false;
-          }
+          return response === "granted";
         } catch (error) {
           console.error("Error al solicitar permiso de orientación:", error);
           return false;
         }
       }
-      // Si el navegador no requiere requestPermission (Android, etc.), asumimos permiso.
-      return true;
+      return true; // Otros navegadores no requieren esto
     }
 
     /******************************************************
@@ -761,11 +754,11 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           vs.element.style.opacity = "1";
           vs.element.style.transform = "scale(1)";
 
-          // Calcular distancia al centro para mostrar nombre
+          // Calcular distancia al centro para decidir si mostrar el nombre
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          // Solo mostrar nombre si está a menos de 80px del centro
+          // Sólo muestra el nombre si está muy cerca del centro (por ejemplo, < 80 px)
           if (dist < 80) {
             vs.nameTag.style.opacity = "1";
           } else {
@@ -798,7 +791,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
             const dx = v1.x - found.x;
             const dy = v1.y - found.y;
             const screenDist = Math.sqrt(dx * dx + dy * dy);
-            if (screenDist < 120) {
+            if (screenDist < 120) { // solo dibuja líneas cortas
               ctx.beginPath();
               ctx.moveTo(v1.x, v1.y);
               ctx.lineTo(found.x, found.y);
@@ -841,7 +834,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
       let dAz = azimuth - alpha;
-      dAz = ((dAz + 540) % 360) - 180; // Normalizar a -180..180
+      dAz = ((dAz + 540) % 360) - 180;
       const dAlt = altitude - alt;
       const fovFactor = 2.5;
       const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
