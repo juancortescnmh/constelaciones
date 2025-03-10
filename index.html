@@ -5,21 +5,14 @@
   <!-- iOS Fullscreen -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
-  <title>Constellations AR</title>
-
-  <!-- Tipografía Avenir (usa Avenir si está instalada, sino fallback a sans-serif) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Constellations AR with GyroNorm</title>
+  <!-- Cargamos GyroNorm.js desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gyronorm/2.0.0/gyronorm.min.js"></script>
   <style>
-    @font-face {
-      font-family: 'Avenir';
-      src: local('Avenir'), local('AvenirLTStd-Book');
-    }
-  </style>
-
-  <style>
-    /* ============================
-       ANIMACIONES GLOBALES
-    ============================ */
+    /* ------------------------------
+       Estilos globales y animaciones
+    ------------------------------ */
     @keyframes cosmicGradient {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
@@ -37,10 +30,9 @@
       0% { opacity: 0; transform: translateY(10px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-
-    /* ============================
-       RESET Y ESTILO BASE
-    ============================ */
+    /* ------------------------------
+       Reset y estilos base
+    ------------------------------ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       overflow: hidden;
@@ -50,10 +42,9 @@
       touch-action: none;
       height: 100vh;
     }
-
-    /* ============================
-       VIDEO / CÁMARA
-    ============================ */
+    /* ------------------------------
+       Cámara y fondo
+    ------------------------------ */
     #video {
       position: fixed;
       top: 0; left: 0;
@@ -61,10 +52,6 @@
       object-fit: cover;
       z-index: 1;
     }
-
-    /* ============================
-       FONDO CÓSMICO
-    ============================ */
     #starfield {
       position: fixed;
       top: 0; left: 0;
@@ -76,10 +63,6 @@
       animation: cosmicGradient 25s ease infinite;
       opacity: 0.7;
     }
-
-    /* ============================
-       CANVAS PARA LÍNEAS
-    ============================ */
     #skyCanvas {
       position: fixed;
       top: 0; left: 0;
@@ -87,10 +70,9 @@
       z-index: 3;
       pointer-events: none;
     }
-
-    /* ============================
-       ESTRELLAS (DOM)
-    ============================ */
+    /* ------------------------------
+       Elementos DOM (estrellas, retícula, etc.)
+    ------------------------------ */
     .star {
       position: absolute;
       border-radius: 50%;
@@ -105,10 +87,6 @@
       box-shadow: 0 0 12px 2px rgba(255,255,255,0.7);
       animation: twinkle 2s infinite ease-in-out, starAppear 0.5s ease forwards;
     }
-
-    /* ============================
-       NOMBRES DE ESTRELLAS (Víctimas)
-    ============================ */
     .star-name {
       position: absolute;
       font-size: 13px;
@@ -123,10 +101,6 @@
       font-family: 'Avenir', sans-serif;
       letter-spacing: 0.3px;
     }
-
-    /* ============================
-       ESTRELLAS FUGACES
-    ============================ */
     .shooting-star {
       position: absolute;
       height: 2px;
@@ -136,10 +110,6 @@
       z-index: 5;
       box-shadow: 0 0 4px #fff;
     }
-
-    /* ============================
-       RETÍCULA CENTRAL
-    ============================ */
     .center-reticle {
       position: fixed;
       left: 50%; top: 50%;
@@ -164,10 +134,9 @@
       width: 100%; height: 2px;
       top: 50%; transform: translateY(-50%);
     }
-
-    /* ============================
-       CONTROLES
-    ============================ */
+    /* ------------------------------
+       Paneles (Inicio, Calibración, Información)
+    ------------------------------ */
     #controls {
       position: fixed;
       bottom: 20px; left: 0;
@@ -190,10 +159,6 @@
       font-family: 'Avenir', sans-serif;
     }
     .btn:hover { background: rgba(40,63,83,0.8); cursor: pointer; }
-
-    /* ============================
-       PANEL DE INFORMACIÓN
-    ============================ */
     #objectInfo {
       position: fixed;
       bottom: 80px; left: 50%;
@@ -218,10 +183,6 @@
       font-weight: 600;
       letter-spacing: 0.4px;
     }
-
-    /* ============================
-       PANEL DE INICIO
-    ============================ */
     #startPanel {
       position: fixed;
       top: 0; left: 0;
@@ -254,7 +215,6 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Botones del panel de inicio */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -275,10 +235,6 @@
       background: linear-gradient(135deg, #4591ff, #1c5cd9);
       cursor: pointer;
     }
-
-    /* ============================
-       PANEL DE CALIBRACIÓN
-    ============================ */
     #calibrationUI {
       position: fixed;
       top: 0; left: 0;
@@ -340,10 +296,9 @@
       transition: 0.3s ease;
       font-family: 'Avenir', sans-serif;
     }
-
-    /* ============================
+    /* ------------------------------
        DEBUG PANEL (siempre visible)
-    ============================ */
+    ------------------------------ */
     #debug {
       position: fixed;
       top: 10px;
@@ -383,11 +338,9 @@
     <h1>Constellations AR</h1>
     <p>
       Use the app in vertical (portrait) mode.<br/>
-      First, click <strong>Request Orientation Permission</strong>.<br/>
-      Then click <strong>Start</strong> to begin.
+      Press <strong>Start</strong> to begin.
     </p>
-    <button id="requestPermissionBtn">Request Orientation Permission</button>
-    <button id="startBtn" disabled>Start</button>
+    <button id="startBtn">Start</button>
   </div>
   <!-- Panel de calibración -->
   <div id="calibrationUI">
@@ -402,7 +355,7 @@
     <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
-  <!-- Debug panel (always visible) -->
+  <!-- Debug panel (siempre visible) -->
   <div id="debug"></div>
   <script>
     /***** STATE VARIABLES *****/
@@ -413,15 +366,15 @@
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    // En modo portrait usamos los valores directamente.
+    // Variables para la orientación (se actualizarán con GyroNorm)
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     // Detectar si es iOS
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    // Multiplicadores para iOS (ajusta estos valores según lo que observes en el debug)
-    const factorX_iOS = 5.0; // Amplifica el movimiento horizontal en iOS
-    const factorY_iOS = 5.0; // Amplifica el movimiento vertical en iOS
+    // Multiplicadores para iOS (ajusta según lo que observes en el debug)
+    const factorX_iOS = 5.0; // Amplifica movimiento horizontal
+    const factorY_iOS = 5.0; // Amplifica movimiento vertical
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -429,7 +382,6 @@
     const ctx = skyCanvas.getContext("2d");
 
     const startPanel = document.getElementById("startPanel");
-    const requestPermissionBtn = document.getElementById("requestPermissionBtn");
     const startBtn = document.getElementById("startBtn");
     const controls = document.getElementById("controls");
     const calibrateBtn = document.getElementById("calibrateBtn");
@@ -557,34 +509,41 @@
       });
     }
 
-    /***** REQUEST ORIENTATION PERMISSION *****/
-    async function requestOrientationPermission() {
-      if (typeof DeviceOrientationEvent !== "undefined" &&
-          typeof DeviceOrientationEvent.requestPermission === "function") {
-        try {
-          const response = await DeviceOrientationEvent.requestPermission();
-          return response === "granted";
-        } catch (error) {
-          console.error("Error requesting orientation permission:", error);
-          return false;
-        }
-      }
-      return true;
-    }
-    requestPermissionBtn.addEventListener("click", async () => {
-      const granted = await requestOrientationPermission();
-      if (granted) {
-        msgOverlay("Orientation permission granted.");
-        requestPermissionBtn.style.display = "none";
-        startBtn.disabled = false;
-      } else {
-        msgOverlay("Orientation permission denied. Clear site data in Safari and try again.");
-      }
+    /***** GYRONORM INITIALIZATION *****/
+    // Usamos GyroNorm para obtener datos de giroscopio de forma unificada.
+    var gn = new GyroNorm();
+    gn.init({
+        frequency: 50, // actualizaciones por segundo
+        orientationBase: GyroNorm.DIRECTION_SCREEN,
+        decimalDigits: 2,
+        logger: true
+    }).then(function(){
+        // Inicia la captura de datos del giroscopio.
+        gn.start(function(data){
+            // data.do contiene alpha, beta, gamma
+            // Actualizamos deviceOrientation usando los datos de GyroNorm.
+            // Para dispositivos no iOS, usamos beta y gamma "directos".
+            // Para iOS, se ha reportado que a veces se deben intercambiar:
+            if (isiOS) {
+              // En este ejemplo, intercambiamos beta y gamma.
+              deviceOrientation.altitude = data.do.gamma; // Vertical
+              deviceOrientation.gamma = data.do.beta;       // Horizontal
+            } else {
+              deviceOrientation.altitude = data.do.beta;
+              deviceOrientation.gamma = data.do.gamma;
+            }
+            deviceOrientation.alpha = data.do.alpha;
+            lastOrientationUpdate = Date.now();
+            updateDebug();
+        });
+    }).catch(function(e){
+        console.error("GyroNorm init failed: ", e);
     });
 
-    /***** START APP *****/
+    /***** CAMERA & APP START *****/
     startBtn.addEventListener("click", async () => {
       try {
+        // Forzar modo vertical.
         if (window.orientation !== 0) {
           msgOverlay("Please use the app in vertical (portrait) mode.");
           return;
@@ -592,9 +551,6 @@
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
         await video.play();
-        if (!window.DeviceOrientationEvent.requestPermission) {
-          window.addEventListener("deviceorientation", handleOrientation);
-        }
         startPanel.style.display = "none";
         controls.style.display = "flex";
         resizeCanvas();
@@ -608,45 +564,6 @@
       } catch (err) {
         console.error("Error starting app:", err);
         msgOverlay("Error starting app: " + err.message);
-      }
-    });
-
-    /***** ORIENTATION HANDLER (PORTRAIT MODE) *****/
-    function handleOrientation(evt) {
-      if (!appActive) return;
-      let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
-      // En iOS se ha reportado que los ejes pueden estar intercambiados.
-      let vertical, horizontal;
-      if (isiOS) {
-        // Intercambiamos: usamos evt.gamma para vertical y evt.beta para horizontal.
-        vertical = evt.gamma || 0;
-        horizontal = evt.beta || 0;
-        // Si es necesario, invertir el horizontal:
-        // horizontal = -horizontal;
-      } else {
-        vertical = evt.beta || 0;
-        horizontal = evt.gamma || 0;
-      }
-      deviceOrientation.alpha = alpha;
-      deviceOrientation.altitude = vertical;
-      deviceOrientation.gamma = horizontal;
-      lastOrientationUpdate = Date.now();
-      updateDebug();
-    }
-
-    /***** FALLBACK: DEVICEMOTION *****/
-    window.addEventListener("devicemotion", (evt) => {
-      if (!lastMotionTimestamp) { lastMotionTimestamp = evt.timeStamp; return; }
-      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
-      lastMotionTimestamp = evt.timeStamp;
-      if (Date.now() - lastOrientationUpdate > 1000) {
-        const rr = evt.rotationRate;
-        if (rr) {
-          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
-          fallbackOrientation.beta += (rr.beta || 0) * dt;
-          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
-          updateDebug();
-        }
       }
     });
 
@@ -679,7 +596,6 @@
       calibMsg.textContent = "Calibration complete!";
       setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
-
     calibrateBtn.addEventListener("click", startCalibration);
     resetBtn.addEventListener("click", () => {
       if (stream) { stream.getTracks().forEach(t => t.stop()); }
@@ -787,8 +703,8 @@
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       if (isiOS) {
-        // Para iOS: Mapeo "fijo": se considera 180° como centro horizontal y 0° de altitud como centro vertical.
-        // Luego se suma el desplazamiento medido.
+        // Para iOS, usamos un mapeo fijo: se considera 180° como centro horizontal y 0° de altitud como centro vertical.
+        // Luego se suma el desplazamiento de los sensores.
         const x = centerX + ((azimuth - 180) / 180) * centerX + (deviceOrientation.gamma - calibrationOffset.gamma) * factorX_iOS;
         const y = centerY - (altitude / 90) * centerY + (deviceOrientation.altitude - calibrationOffset.altitude) * factorY_iOS;
         return { x, y, inView: true };
@@ -845,11 +761,6 @@ Calibration Offsets:
   Vertical: ${calibrationOffset.altitude.toFixed(1)}
   Horizontal: ${calibrationOffset.gamma.toFixed(1)}
 Time since last update: ${((Date.now() - lastOrientationUpdate) / 1000).toFixed(2)} s`;
-    }
-
-    /***** TOGGLE DEBUG (opcional) *****/
-    function toggleDebug() {
-      debugEl.style.display = (debugEl.style.display === "none") ? "block" : "none";
     }
 
     /***** MSG OVERLAY *****/
