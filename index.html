@@ -250,7 +250,7 @@
       animation: panelFadeIn 1s ease forwards;
       font-family: 'Avenir', sans-serif;
     }
-    /* Se agregan dos botones: uno para solicitar permiso y otro para iniciar */
+    /* Dos botones: uno para solicitar permiso y otro para iniciar */
     #requestPermissionBtn, #startBtn {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -386,7 +386,7 @@
     <p>
       Otorga permisos de cámara y sensores.<br/>
       Primero haz clic en <strong>Solicitar Permiso de Orientación</strong>.<br/>
-      Luego presiona <strong>Comenzar</strong> para disfrutar.
+      Luego presiona <strong>Comenzar</strong> para iniciar.
     </p>
     <button id="requestPermissionBtn">Solicitar Permiso de Orientación</button>
     <button id="startBtn" disabled>Comenzar</button>
@@ -417,14 +417,12 @@
     let calibrating = false;
     let stream = null;
     let showDebug = false;
-
-    let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
-    let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
-
-    // Variables para fallback con devicemotion
     let lastOrientationUpdate = Date.now();
     let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
+
+    let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
+    let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -478,10 +476,10 @@
      * ESTRELLAS DE FONDO
      ******************************************************/
     const BACKGROUND_STAR_COUNT = 400;
-    let backgroundStars = [];
+    let backgroundStarsArr = [];
     function createBackgroundStars(){
       starfield.innerHTML = "";
-      backgroundStars = [];
+      backgroundStarsArr = [];
       for (let i = 0; i < BACKGROUND_STAR_COUNT; i++){
         const az = Math.random() * 360;
         const alt = (Math.asin(2 * Math.random() - 1) * 180) / Math.PI;
@@ -492,7 +490,7 @@
         starEl.style.height = size + "px";
         starEl.style.opacity = (Math.random() * 0.7 + 0.3).toFixed(2);
         if (Math.random() > 0.9) starEl.classList.add("bright");
-        backgroundStars.push({ element: starEl, azimuth: az, altitude: alt });
+        backgroundStarsArr.push({ element: starEl, azimuth: az, altitude: alt });
         starfield.appendChild(starEl);
       }
     }
@@ -527,11 +525,8 @@
             break;
           }
         }
-        if (!placed){
-          console.log("No se pudo ubicar:", name);
-        }
+        if (!placed) { console.log("No se pudo ubicar:", name); }
       });
-
       placedStars.forEach(st => {
         const size = 2 + Math.random() * 2;
         const bright = Math.random() < 0.3;
@@ -544,29 +539,23 @@
           connections: []
         });
       });
-
       computeConnections();
-
       victimStars.forEach(st => {
         const starEl = document.createElement("div");
         starEl.className = "star";
         starEl.style.width = st.size + "px";
         starEl.style.height = st.size + "px";
         if (st.bright) starEl.classList.add("bright");
-
         const nameEl = document.createElement("div");
         nameEl.className = "star-name";
         nameEl.textContent = st.name;
-
         starfield.appendChild(starEl);
         starfield.appendChild(nameEl);
-
         st.element = starEl;
         st.nameTag = nameEl;
       });
     }
 
-    // Conecta cada estrella con las 2 más cercanas (umbral reducido)
     function computeConnections(){
       const threshold = 20;
       victimStars.forEach((star, i) => {
@@ -584,13 +573,12 @@
     }
 
     /******************************************************
-     * SOLICITAR PERMISO DE ORIENTACIÓN (GIROSCOPIO)
+     * SOLICITAR PERMISO DE ORIENTACIÓN
      ******************************************************/
     async function requestOrientationPermission() {
       if (typeof DeviceOrientationEvent !== "undefined" &&
           typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
-          // Esta llamada se realiza en respuesta directa al clic
           const response = await DeviceOrientationEvent.requestPermission();
           return response === "granted";
         } catch (error) {
@@ -602,58 +590,16 @@
     }
 
     /******************************************************
-     * FALLBACK: DEVICEMOTION (para integrar rotationRate)
-     ******************************************************/
-    let lastOrientationUpdate = Date.now();
-    let lastMotionTimestamp = null;
-    let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
-
-    // Escuchar deviceorientation para actualizar normalmente
-    window.addEventListener("deviceorientation", (evt) => {
-      if (evt.alpha !== null || evt.beta !== null || evt.gamma !== null) {
-        deviceOrientation.alpha = evt.alpha !== null ? evt.alpha : 0;
-        deviceOrientation.beta = evt.beta !== null ? evt.beta : 0;
-        deviceOrientation.gamma = evt.gamma !== null ? evt.gamma : 0;
-        lastOrientationUpdate = Date.now();
-        // Reiniciar fallback
-        fallbackOrientation.alpha = deviceOrientation.alpha;
-        fallbackOrientation.beta = deviceOrientation.beta;
-        fallbackOrientation.gamma = deviceOrientation.gamma;
-      }
-    });
-
-    // Fallback: usar devicemotion si no llegan updates de deviceorientation
-    window.addEventListener("devicemotion", (evt) => {
-      if (!lastMotionTimestamp) {
-        lastMotionTimestamp = evt.timeStamp;
-        return;
-      }
-      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
-      lastMotionTimestamp = evt.timeStamp;
-      if (Date.now() - lastOrientationUpdate > 1000) { // Si no hubo update en 1s
-        const rr = evt.rotationRate;
-        if (rr) {
-          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
-          fallbackOrientation.beta  += (rr.beta || 0) * dt;
-          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
-          deviceOrientation.alpha = fallbackOrientation.alpha;
-          deviceOrientation.beta = fallbackOrientation.beta;
-          deviceOrientation.gamma = fallbackOrientation.gamma;
-        }
-      }
-    });
-
-    /******************************************************
      * BOTÓN: Solicitar Permiso de Orientación
      ******************************************************/
-    requestPermissionBtn.addEventListener("click", async () => {
+    document.getElementById("requestPermissionBtn").addEventListener("click", async () => {
       const granted = await requestOrientationPermission();
       if (granted) {
         msgOverlay("Permiso de orientación concedido.");
-        requestPermissionBtn.style.display = "none";
+        document.getElementById("requestPermissionBtn").style.display = "none";
         startBtn.disabled = false;
       } else {
-        msgOverlay("Permiso de orientación denegado. Si ya lo rechazaste, borra los datos del sitio en Safari e inténtalo de nuevo.");
+        msgOverlay("Permiso de orientación denegado. Borra los datos del sitio en Safari e inténtalo de nuevo.");
       }
     });
 
@@ -662,41 +608,33 @@
      ******************************************************/
     startBtn.addEventListener("click", async () => {
       try {
-        // 1) Obtener cámara
+        // Obtener cámara
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
         video.srcObject = stream;
         await video.play();
-
-        // 2) Si el navegador no requiere requestPermission, ya tenemos permisos
+    
+        // Si no es iOS (o ya se solicitó permiso), añadimos listener de orientación
         if (!window.DeviceOrientationEvent.requestPermission) {
           window.addEventListener("deviceorientation", handleOrientation);
         }
-
-        // 3) Ocultar panel de inicio y mostrar controles
+    
         startPanel.style.display = "none";
         controls.style.display = "flex";
-
-        // 4) Ajustar canvas y crear estrellas
+    
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
         createBackgroundStars();
         createVictimStars();
-
-        // 5) Activar la app
+    
         appActive = true;
-
-        // 6) Estrellas fugaces
+    
         setInterval(createShootingStar, 3000);
-
-        // 7) Calibración inicial
+    
         startCalibration();
-
-        // 8) Habilitar debug con doble click
+    
         document.addEventListener("dblclick", toggleDebug);
-
-        // 9) Iniciar bucle de actualización
+    
         requestAnimationFrame(updatePositions);
-
       } catch (err) {
         console.error("Error al iniciar:", err);
         msgOverlay("Error al iniciar: " + err.message);
@@ -716,11 +654,13 @@
       }
       const altitude = (evt.beta || 0) - 90;
       const gamma = evt.gamma || 0;
-
+    
       deviceOrientation.alpha = alpha;
       deviceOrientation.altitude = altitude;
       deviceOrientation.gamma = gamma;
-
+    
+      lastOrientationUpdate = Date.now();
+    
       if (calibrating) updateCalibrationUI();
       if (showDebug) {
         debugEl.textContent = `
@@ -731,7 +671,30 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         `;
       }
     }
-
+    
+    /******************************************************
+     * FALLBACK: DEVICEMOTION (actualizar giroscopio)
+     ******************************************************/
+    window.addEventListener("devicemotion", (evt) => {
+      if (!lastMotionTimestamp) {
+        lastMotionTimestamp = evt.timeStamp;
+        return;
+      }
+      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
+      lastMotionTimestamp = evt.timeStamp;
+      if (Date.now() - lastOrientationUpdate > 1000) {
+        const rr = evt.rotationRate;
+        if (rr) {
+          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
+          fallbackOrientation.beta += (rr.beta || 0) * dt;
+          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
+          deviceOrientation.alpha = fallbackOrientation.alpha;
+          deviceOrientation.beta = fallbackOrientation.beta;
+          deviceOrientation.gamma = fallbackOrientation.gamma;
+        }
+      }
+    });
+    
     /******************************************************
      * CALIBRACIÓN
      ******************************************************/
@@ -763,7 +726,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       calibMsg.textContent = "¡Calibración completada!";
       setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
-
+    
     /******************************************************
      * REINICIAR
      ******************************************************/
@@ -772,7 +735,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       if (stream) { stream.getTracks().forEach(t => t.stop()); }
       window.location.reload();
     });
-
+    
     /******************************************************
      * AJUSTAR CANVAS
      ******************************************************/
@@ -780,7 +743,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       skyCanvas.width = window.innerWidth;
       skyCanvas.height = window.innerHeight;
     }
-
+    
     /******************************************************
      * BUCLE DE ACTUALIZACIÓN
      ******************************************************/
@@ -789,12 +752,10 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         requestAnimationFrame(updatePositions);
         return;
       }
-
-      // Limpiar canvas de líneas
+    
       ctx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
-
-      // Actualizar estrellas de fondo
-      backgroundStars.forEach(bs => {
+    
+      backgroundStarsArr.forEach(bs => {
         const pos = calculateScreenPosition(bs.azimuth, bs.altitude);
         if (pos.inView) {
           bs.element.style.display = "block";
@@ -808,8 +769,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           bs.element.style.transform = "scale(0.5)";
         }
       });
-
-      // Actualizar estrellas de víctimas
+    
       let visibleVictims = [];
       victimStars.forEach(vs => {
         const pos = calculateScreenPosition(vs.azimuth, vs.altitude);
@@ -819,12 +779,10 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           vs.element.style.top = pos.y + "px";
           vs.element.style.opacity = "1";
           vs.element.style.transform = "scale(1)";
-
-          // Calcular distancia al centro para decidir si mostrar el nombre
+    
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          // Solo muestra el nombre si está muy cerca del centro (< 80px)
           if (dist < 80) {
             vs.nameTag.style.opacity = "1";
           } else {
@@ -832,7 +790,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           }
           vs.nameTag.style.left = pos.x + "px";
           vs.nameTag.style.top = (pos.y - vs.size / 2 - 5) + "px";
-
+    
           visibleVictims.push({ data: vs, x: pos.x, y: pos.y });
         } else {
           vs.element.style.display = "none";
@@ -841,8 +799,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
           vs.nameTag.style.opacity = "0";
         }
       });
-
-      // Dibujar líneas con glow (solo entre estrellas cercanas)
+    
       ctx.save();
       ctx.strokeStyle = "rgba(255,255,255,0.7)";
       ctx.lineWidth = 1.2;
@@ -867,8 +824,7 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
         });
       });
       ctx.restore();
-
-      // Determinar la estrella más cercana al centro para mostrar info en el panel
+    
       let closestStar = null;
       let minDist = Infinity;
       const centerX = window.innerWidth / 2;
@@ -889,13 +845,10 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       } else {
         objectInfo.style.display = "none";
       }
-
+    
       requestAnimationFrame(updatePositions);
     }
-
-    /******************************************************
-     * CALCULAR POSICIÓN (AR)
-     ******************************************************/
+    
     function calculateScreenPosition(azimuth, altitude) {
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
@@ -908,102 +861,36 @@ Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altit
       const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
     }
-
-    /******************************************************
-     * FALLBACK: DEVICEMOTION PARA GIROSCOPIO
-     ******************************************************/
-    window.addEventListener("devicemotion", (evt) => {
-      if (!lastMotionTimestamp) {
-        lastMotionTimestamp = evt.timeStamp;
-        return;
-      }
-      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
-      lastMotionTimestamp = evt.timeStamp;
-      // Si no se han recibido eventos de deviceorientation en 1 segundo, usar devicemotion
-      if (Date.now() - lastOrientationUpdate > 1000) {
-        const rr = evt.rotationRate;
-        if (rr) {
-          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
-          fallbackOrientation.beta += (rr.beta || 0) * dt;
-          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
-          deviceOrientation.alpha = fallbackOrientation.alpha;
-          deviceOrientation.beta = fallbackOrientation.beta;
-          deviceOrientation.gamma = fallbackOrientation.gamma;
-        }
-      }
-    });
-
-    /******************************************************
-     * BOTÓN: Solicitar Permiso de Orientación
-     ******************************************************/
-    requestPermissionBtn.addEventListener("click", async () => {
-      const granted = await requestOrientationPermission();
-      if (granted) {
-        msgOverlay("Permiso de orientación concedido.");
-        requestPermissionBtn.style.display = "none";
-        startBtn.disabled = false;
-      } else {
-        msgOverlay("Permiso de orientación denegado. Si ya lo rechazaste, borra los datos del sitio en Safari e inténtalo de nuevo.");
-      }
-    });
-
-    /******************************************************
-     * INICIAR APLICACIÓN
-     ******************************************************/
-    startBtn.addEventListener("click", async () => {
-      try {
-        // 1) Obtener cámara
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = stream;
-        await video.play();
-
-        // 2) Si no se usa requestPermission (Android), añadir listener de orientación
-        if (!window.DeviceOrientationEvent.requestPermission) {
-          window.addEventListener("deviceorientation", handleOrientation);
-        }
-
-        // 3) Ocultar panel de inicio y mostrar controles
-        startPanel.style.display = "none";
-        controls.style.display = "flex";
-
-        // 4) Ajustar canvas y crear estrellas
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
-        createBackgroundStars();
-        createVictimStars();
-
-        // 5) Activar la aplicación
-        appActive = true;
-
-        // 6) Estrellas fugaces
-        setInterval(createShootingStar, 3000);
-
-        // 7) Calibración inicial
-        startCalibration();
-
-        // 8) Habilitar debug con doble click
-        document.addEventListener("dblclick", toggleDebug);
-
-        // 9) Iniciar bucle de actualización
-        requestAnimationFrame(updatePositions);
-
-      } catch (err) {
-        console.error("Error al iniciar:", err);
-        msgOverlay("Error al iniciar: " + err.message);
-      }
-    });
-
-    /******************************************************
-     * TOGGLE DEBUG
-     ******************************************************/
+    
+    function createShootingStar() {
+      if (!appActive || calibrating) return;
+      const el = document.createElement("div");
+      el.className = "shooting-star";
+      const length = 50 + Math.random() * 100;
+      el.style.width = length + "px";
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * (window.innerHeight / 3);
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      const angle = ((Math.random() * 60 + 30) * Math.PI) / 180;
+      el.style.transform = `rotate(${angle}rad)`;
+      document.body.appendChild(el);
+      el.animate([
+        { opacity: 0, transform: `rotate(${angle}rad) translateX(0)` },
+        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
+        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
+        { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
+      ], {
+        duration: 1000 + Math.random() * 1000,
+        easing: "ease-in-out"
+      }).onfinish = () => el.remove();
+    }
+    
     function toggleDebug() {
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
     }
-
-    /******************************************************
-     * MENSAJE OVERLAY (para avisar al usuario)
-     ******************************************************/
+    
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
