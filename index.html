@@ -5,20 +5,15 @@
   <!-- iOS Fullscreen -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta
-    name="viewport"
-    content="width=device-width, maximum-scale=1.0, user-scalable=no"
-  />
-  <title>Cielo de Memoria AR - Avenir</title>
+  <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
+  <title>Constellations AR</title>
 
-  <!-- Tipografía Avenir (con fallback a sans-serif) -->
+  <!-- Tipografía Avenir (usa Avenir si está instalada, sino se usará sans-serif) -->
   <style>
     @font-face {
       font-family: 'Avenir';
-      src: local('Avenir'), local('AvenirLTStd-Book'); 
+      src: local('Avenir'), local('AvenirLTStd-Book');
     }
-    
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap');
   </style>
 
   <style>
@@ -31,8 +26,8 @@
       100% { background-position: 0% 50%; }
     }
     @keyframes twinkle {
-      0%, 100% { opacity: 0.8; transform: scale(1); filter: blur(0px); }
-      50% { opacity: 1; transform: scale(1.2); filter: blur(1px); }
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
     }
     @keyframes starAppear {
       from { opacity: 0; transform: scale(0.5); }
@@ -42,25 +37,15 @@
       0% { opacity: 0; transform: translateY(10px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    @keyframes starBreath {
-      0%, 100% { opacity: 0.9; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.15); }
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 1; }
-    }
 
     /* ============================
-       RESETEO Y ESTILO BASE
+       RESET Y ESTILO BASE
     ============================ */
-    * {
-      margin: 0; padding: 0; box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       overflow: hidden;
       background: #000;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
+      font-family: 'Avenir', sans-serif;
       color: #fff;
       touch-action: none;
       height: 100vh;
@@ -86,30 +71,25 @@
       width: 100%; height: 100%;
       z-index: 2;
       pointer-events: none;
-      background: linear-gradient(135deg, 
-        rgba(1,2,20,0.7) 0%, 
-        rgba(5,10,45,0.7) 25%, 
-        rgba(10,15,70,0.7) 50%, 
-        rgba(20,25,80,0.7) 70%, 
-        rgba(30,15,60,0.7) 85%, 
-        rgba(15,5,40,0.7) 100%);
-      background-size: 400% 400%;
-      animation: cosmicGradient 30s ease infinite;
-      will-change: background-position;
+      background: linear-gradient(120deg, #01010f, #090921, #0f0c29);
+      background-size: 200% 200%;
+      animation: cosmicGradient 25s ease infinite;
+      opacity: 0.7;
     }
 
     /* ============================
        CANVAS PARA LÍNEAS
     ============================ */
     #skyCanvas {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 3;
       pointer-events: none;
     }
 
     /* ============================
-       ESTRELLAS MEJORADAS
+       ESTRELLAS (DOM)
     ============================ */
     .star {
       position: absolute;
@@ -120,67 +100,45 @@
       animation: starAppear 0.5s ease forwards;
       transition: opacity 0.3s ease, transform 0.3s ease;
       z-index: 4;
-      will-change: transform, opacity;
     }
     .star.bright {
-      box-shadow: 0 0 15px 2px rgba(255,255,255,0.7);
-      animation: twinkle 4s infinite ease-in-out, starAppear 0.5s ease forwards;
-    }
-    .star.gold {
-      background-color: #fff8e0;
-      box-shadow: 0 0 8px rgba(255, 248, 224, 0.8);
-    }
-    .star.blue {
-      background-color: #e0f8ff;
-      box-shadow: 0 0 8px rgba(224, 248, 255, 0.8);
-    }
-    .star.red {
-      background-color: #ffe0e0;
-      box-shadow: 0 0 8px rgba(255, 224, 224, 0.8);
-    }
-    .star.purple {
-      background-color: #f5e0ff;
-      box-shadow: 0 0 8px rgba(245, 224, 255, 0.8);
-    }
-
-    /* Nombres de estrellas (víctimas) */
-    .star-name {
-      position: absolute;
-      font-size: 12px;
-      font-weight: 400;
-      color: #fff;
-      pointer-events: none;
-      text-shadow: 0 0 10px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,0.7);
-      opacity: 0;
-      transform: translate(-50%, -150%) scale(0.7);
-      z-index: 4;
-      transition: opacity 0.7s ease, transform 0.7s ease;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      letter-spacing: 0.5px;
-      background: rgba(0,0,0,0.4);
-      padding: 3px 8px;
-      border-radius: 12px;
-      white-space: nowrap;
-      border: 1px solid rgba(255,255,255,0.1);
-      will-change: opacity, transform;
+      box-shadow: 0 0 12px 2px rgba(255,255,255,0.7);
+      animation: twinkle 2s infinite ease-in-out, starAppear 0.5s ease forwards;
     }
 
     /* ============================
-       ESTRELLAS FUGACES MEJORADAS
+       NOMBRES DE ESTRELLAS (Víctimas)
+    ============================ */
+    .star-name {
+      position: absolute;
+      font-size: 13px;
+      font-weight: 400;
+      color: #fff;
+      pointer-events: none;
+      text-shadow: 0 0 4px #000, 0 0 8px #000;
+      opacity: 0;
+      transform: translate(-50%, -150%);
+      z-index: 4;
+      transition: opacity 0.3s ease;
+      font-family: 'Avenir', sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    /* ============================
+       ESTRELLAS FUGACES
     ============================ */
     .shooting-star {
       position: absolute;
       height: 2px;
-      background: linear-gradient(to right, rgba(255,255,255,0), #fff 20%, rgba(200,200,255,1) 40%, rgba(255,255,255,0.8) 70%, rgba(255,255,255,0));
+      background: linear-gradient(to right, rgba(255,255,255,0), #fff, rgba(255,255,255,0));
       transform-origin: left center;
       pointer-events: none;
       z-index: 5;
-      box-shadow: 0 0 6px #fff;
-      will-change: transform, opacity;
+      box-shadow: 0 0 4px #fff;
     }
 
     /* ============================
-       INDICADOR CENTRAL MEJORADO
+       RETÍCULA CENTRAL
     ============================ */
     .center-reticle {
       position: fixed;
@@ -191,8 +149,6 @@
       border-radius: 50%;
       pointer-events: none;
       z-index: 20;
-      box-shadow: 0 0 5px rgba(255,255,255,0.1);
-      transition: all 0.3s ease;
     }
     .center-reticle::before, .center-reticle::after {
       content: "";
@@ -207,312 +163,266 @@
       width: 100%; height: 2px;
       top: 50%; transform: translateY(-50%);
     }
-    .center-reticle.active {
-      border-color: rgba(255,172,130,0.7);
-      box-shadow: 0 0 10px rgba(255,172,130,0.3);
-    }
-    .center-reticle.active::before, .center-reticle.active::after {
-      background: rgba(255,172,130,0.7);
-    }
 
     /* ============================
-       CONTROLES MEJORADOS
+       CONTROLES
     ============================ */
     #controls {
       position: fixed;
       bottom: 20px; left: 0;
-      width: 100%; z-index: 10;
-      display: none; justify-content: center; gap: 15px;
+      width: 100%;
+      z-index: 10;
+      display: none;
+      justify-content: center;
+      gap: 10px;
       animation: panelFadeIn 0.8s ease forwards;
     }
     .btn {
       padding: 10px 20px;
-      background: rgba(8,8,32,0.7);
+      background: rgba(13,27,42,0.7);
       color: #fff;
-      border: 1px solid rgba(200,200,255,0.3);
-      border-radius: 25px;
+      border: 1px solid rgba(100,149,237,0.4);
+      border-radius: 20px;
       font-size: 14px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      letter-spacing: 0.3px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      font-family: 'Avenir', sans-serif;
     }
-    .btn:hover { 
-      background: rgba(16,16,48,0.9); 
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-      border-color: rgba(200,200,255,0.5);
-    }
-    .btn:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .btn-icon {
-      margin-right: 6px;
-      font-size: 14px;
-    }
+    .btn:hover { background: rgba(40,63,83,0.8); cursor: pointer; }
 
     /* ============================
-       PANEL INFORMACIÓN MEJORADO
+       PANEL DE INFORMACIÓN
     ============================ */
     #objectInfo {
       position: fixed;
       bottom: 80px; left: 50%;
       transform: translateX(-50%);
-      background: rgba(8,8,32,0.7);
+      background: rgba(13,27,42,0.7);
       color: #fff;
-      padding: 15px 25px;
-      border-radius: 15px;
-      max-width: 85%;
+      padding: 10px 20px;
+      border-radius: 10px;
+      max-width: 80%;
       text-align: center;
       z-index: 10;
       display: none;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(200,200,255,0.3);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(100,149,237,0.4);
       animation: panelFadeIn 0.8s ease forwards;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      box-shadow: 0 0 30px rgba(0,0,0,0.6), 0 0 60px rgba(0,0,0,0.3);
+      font-family: 'Avenir', sans-serif;
     }
     #objectInfo h3 {
-      margin-bottom: 8px;
-      color: #ffffff;
-      font-size: 20px;
+      margin-bottom: 5px;
+      color: #82b1ff;
+      font-size: 18px;
       font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    #objectInfo p {
-      line-height: 1.6;
-      font-size: 14px;
-      font-weight: 300;
+      letter-spacing: 0.4px;
     }
 
     /* ============================
-       PANEL DE INICIO MEJORADO
+       PANEL DE INICIO
     ============================ */
     #startPanel {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      text-align: center; padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
       z-index: 100;
-      background: linear-gradient(135deg, 
-        rgba(1,2,20,1) 0%, 
-        rgba(5,10,45,1) 25%, 
-        rgba(10,15,70,1) 50%, 
-        rgba(20,25,80,1) 70%, 
-        rgba(30,15,60,1) 85%, 
-        rgba(15,5,40,1) 100%);
+      background: linear-gradient(135deg, #01010f, #2a002b);
       background-size: 400% 400%;
       animation: cosmicGradient 15s ease infinite;
     }
     #startPanel h1 {
-      margin-bottom: 20px;
-      font-size: 36px;
+      margin-bottom: 30px;
+      font-size: 28px;
       color: #fff;
-      text-shadow: 0 0 15px rgba(255,255,255,0.5),
-                   0 0 40px rgba(255,255,255,0.3);
+      text-shadow: 0 2px 10px rgba(100,181,246,0.5),
+                   0 0 10px rgba(255,255,255,0.3);
       animation: panelFadeIn 1s ease forwards;
       font-weight: 600;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      letter-spacing: 1.5px;
+      font-family: 'Avenir', sans-serif;
     }
     #startPanel p {
-      margin-bottom: 40px;
+      margin-bottom: 20px;
       color: #eee;
       font-size: 16px;
-      max-width: 700px;
-      line-height: 1.8;
       animation: panelFadeIn 1s ease forwards;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      font-weight: 300;
+      font-family: 'Avenir', sans-serif;
     }
-    #startBtn {
-      padding: 15px 40px;
-      background: linear-gradient(135deg, #ffffff, #a8c0ff);
-      color: #080820;
+    /* Botones del panel de inicio */
+    #requestPermissionBtn, #startBtn {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #2962ff, #0039cb);
+      color: #fff;
       border: none;
       border-radius: 30px;
       font-size: 18px;
-      box-shadow: 0 4px 20px rgba(255,255,255,0.3);
-      animation: panelFadeIn 1.2s ease forwards, glow 3s infinite ease-in-out;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      font-weight: 500;
+      box-shadow: 0 4px 15px rgba(41,98,255,0.4);
+      animation: panelFadeIn 1.2s ease forwards;
+      font-family: 'Avenir', sans-serif;
+      margin: 5px;
+    }
+    #startBtn:disabled {
+      background: rgba(13,27,42,0.7);
+      cursor: not-allowed;
+    }
+    #requestPermissionBtn:hover, #startBtn:hover {
+      background: linear-gradient(135deg, #4591ff, #1c5cd9);
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      letter-spacing: 0.5px;
-    }
-    #startBtn:hover {
-      background: linear-gradient(135deg, #ffffff, #c0d0ff);
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 6px 25px rgba(255,255,255,0.4);
-    }
-    #startBtn:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 15px rgba(255,255,255,0.2);
     }
 
     /* ============================
-       PANEL DE CALIBRACIÓN MEJORADO
+       PANEL DE CALIBRACIÓN
     ============================ */
     #calibrationUI {
-      position: fixed; top: 0; left: 0;
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(5px);
-      display: none; flex-direction: column;
-      justify-content: center; align-items: center;
-      z-index: 50; text-align: center; padding: 20px;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      text-align: center;
+      padding: 20px;
     }
     #calibrationUI h2 {
-      margin-bottom: 20px; font-size: 28px;
+      margin-bottom: 20px;
+      font-size: 24px;
       animation: panelFadeIn 0.5s ease forwards;
       font-weight: 600;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      text-shadow: 0 0 10px rgba(255,255,255,0.3);
+      font-family: 'Avenir', sans-serif;
     }
     #calibrationUI p {
-      margin-bottom: 30px; max-width: 80%;
-      animation: panelFadeIn 0.7s ease forwards; color: #ddd;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      line-height: 1.5;
+      margin-bottom: 30px;
+      max-width: 80%;
+      animation: panelFadeIn 0.7s ease forwards;
+      color: #ddd;
+      font-family: 'Avenir', sans-serif;
     }
     #calibrationIndicator {
       width: 200px; height: 200px;
-      border-radius: 50%; border: 2px solid rgba(200,200,255,0.5);
-      position: relative; margin-bottom: 40px;
+      border-radius: 50%;
+      border: 2px solid #82b1ff;
+      position: relative;
+      margin-bottom: 40px;
       animation: panelFadeIn 0.8s ease forwards;
-      box-shadow: 0 0 30px rgba(0,0,0,0.6), 0 0 15px rgba(200,200,255,0.3);
     }
     #calibrationDot {
-      width: 20px; height: 20px;
-      background-color: #6495ED;
+      width: 20px;
+      height: 20px;
+      background-color: #2962ff;
       border-radius: 50%;
-      position: absolute; left: 50%; top: 50%;
+      position: absolute;
+      left: 50%;
+      top: 50%;
       transform: translate(-50%,-50%);
-      box-shadow: 0 0 10px rgba(100,149,237,0.8);
-      transition: transform 0.2s ease;
+      box-shadow: 0 0 10px rgba(41,98,255,0.7);
     }
     #confirmCalibration {
-      padding: 12px 30px;
-      background: linear-gradient(135deg, #4a80ff, #2962ff);
+      padding: 10px 20px;
+      background: #2962ff;
       color: #fff;
       border: none;
-      border-radius: 25px;
+      border-radius: 20px;
       font-size: 16px;
       animation: panelFadeIn 1s ease forwards;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      box-shadow: 0 4px 15px rgba(41,98,255,0.4);
-      transition: all 0.2s ease;
+      font-family: 'Avenir', sans-serif;
     }
     #confirmCalibration:hover {
-      background: linear-gradient(135deg, #5c8aff, #3a75ff);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(41,98,255,0.5);
+      background: #1c47a8;
+      cursor: pointer;
     }
     #calibMsg {
-      margin-top: 15px; color: #ccc; font-size: 14px; transition: 0.3s ease;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
+      margin-top: 10px;
+      color: #ccc;
+      font-size: 13px;
+      transition: 0.3s ease;
+      font-family: 'Avenir', sans-serif;
     }
 
     /* ============================
-       DEBUG
+       DEBUG PANEL
     ============================ */
     #debug {
-      position: fixed; top: 10px; left: 10px;
-      background: rgba(8,8,32,0.7);
-      padding: 10px; border-radius: 8px;
-      font-size: 11px; max-width: 50%;
-      z-index: 100; display: none; white-space: pre;
-      font-family: 'Montserrat', 'Avenir', sans-serif;
-      border: 1px solid rgba(200,200,255,0.2);
-      backdrop-filter: blur(5px);
-    }
-
-    /* ============================
-       EFECTOS VISUALES ADICIONALES
-    ============================ */
-    .nebula {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(60px);
-      opacity: 0.07;
-      z-index: 1;
-      animation: nebulaPulse 12s infinite ease-in-out;
-      mix-blend-mode: screen;
-      pointer-events: none;
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 10px;
+      max-width: 50%;
+      z-index: 100;
+      display: none;
+      white-space: pre;
+      font-family: 'Avenir', sans-serif;
     }
   </style>
 </head>
 <body>
   <!-- Cámara -->
   <video id="video" playsinline muted></video>
-
   <!-- Fondo cósmico -->
   <div id="starfield"></div>
-
   <!-- Canvas para líneas -->
   <canvas id="skyCanvas"></canvas>
-
   <!-- Retícula central -->
   <div class="center-reticle"></div>
-
-  <!-- Controles (Calibrar, Reiniciar) -->
+  <!-- Controles -->
   <div id="controls">
-    <button id="calibrateBtn" class="btn"><span class="btn-icon">⟲</span> Calibrar</button>
-    <button id="resetBtn" class="btn"><span class="btn-icon">↺</span> Reiniciar</button>
+    <button id="calibrateBtn" class="btn">Calibrate</button>
+    <button id="resetBtn" class="btn">Reset</button>
   </div>
-
-  <!-- Panel de información (estrella apuntada) -->
+  <!-- Panel de información -->
   <div id="objectInfo">
     <h3 id="objectName"></h3>
     <p id="objectDesc"></p>
   </div>
-
   <!-- Panel de inicio -->
   <div id="startPanel">
-    <h1>Cielo de Memoria AR</h1>
+    <h1>Constellations AR</h1>
     <p>
-      Otorga permisos de cámara y sensores.<br/>
-      Presiona <strong>Comenzar</strong> para ver las constelaciones dispersas,<br/>
-      con un glow más visible y nombres sólo cerca del centro.
+      Use the app in vertical (portrait) mode.<br/>
+      First, click <strong>Request Orientation Permission</strong>.<br/>
+      Then click <strong>Start</strong> to begin.
     </p>
-    <button id="startBtn">Comenzar</button>
+    <button id="requestPermissionBtn">Request Orientation Permission</button>
+    <button id="startBtn" disabled>Start</button>
   </div>
-
   <!-- Panel de calibración -->
   <div id="calibrationUI">
-    <h2>Calibración</h2>
+    <h2>Calibration</h2>
     <p>
-      Apunta tu teléfono al frente y ajusta la bola azul<br/>
-      en el centro de la pantalla. Luego presiona Confirmar.
+      Point your phone straight ahead and align the blue dot at the center.<br/>
+      Then click Confirm.
     </p>
     <div id="calibrationIndicator">
       <div id="calibrationDot"></div>
     </div>
-    <button id="confirmCalibration">Confirmar</button>
+    <button id="confirmCalibration">Confirm</button>
     <p id="calibMsg"></p>
   </div>
-
   <!-- Debug info -->
   <div id="debug"></div>
-
   <script>
-    /******************************************************
-     * VARIABLES DE ESTADO
-     ******************************************************/
+    /***** STATE VARIABLES *****/
     let appActive = false;
     let calibrating = false;
     let stream = null;
     let showDebug = false;
-    let frameCount = 0;
-    let closestStarLastFrame = null;
+    let lastOrientationUpdate = Date.now();
+    let lastMotionTimestamp = null;
+    let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
 
-    let deviceOrientation = { alpha:0, altitude:0, gamma:0 };
-    let calibrationOffset = { alpha:0, altitude:0, gamma:0 };
+    // In portrait mode, we use evt.beta and evt.gamma directly.
+    let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
+    let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
@@ -520,6 +430,7 @@
     const ctx = skyCanvas.getContext("2d");
 
     const startPanel = document.getElementById("startPanel");
+    const requestPermissionBtn = document.getElementById("requestPermissionBtn");
     const startBtn = document.getElementById("startBtn");
     const controls = document.getElementById("controls");
     const calibrateBtn = document.getElementById("calibrateBtn");
@@ -534,163 +445,77 @@
     const confirmCalibration = document.getElementById("confirmCalibration");
     const debugEl = document.getElementById("debug");
     const calibMsg = document.getElementById("calibMsg");
-    const centerReticle = document.querySelector(".center-reticle");
 
-    /******************************************************
-     * LISTA DE VÍCTIMAS DE FALSOS POSITIVOS
-     ******************************************************/
+    /***** VICTIM NAMES *****/
     const victimNames = [
-      "Saín Álvarez","Jorge Eliécer García Claro","Ariel Jaime Arias","Ramiro Blanco Rubio",
-      "Miguel Ángel Carrascal Toro","Dioselino Durán Pérez","Guillermo Reyes Aponte","Alejandro Chocó Cáceres",
-      "Miguel Ángel Peña Ortega","Luis Antonio Sánchez Guerrero","William Sarabia Jaimes","Deiber Ramírez",
-      "Euclides García Claro","Jair Julio Vega","Diosemiro Chinchilla Contreras","Jhon Jairo Contreras Vera",
-      "Pedro Jesús Bayona Rojas","Gerardo Quintero Jaimes","Luis Carlos Angarita","José Néstor Rodríguez Santana",
-      "Jesús Emilio Navarro Garay","Daniel Suárez Martínez","Jaime Castillo Peña","Diego Alberto Tamayo Garcera",
-      "Carlos Mauricio Nova Vega","Rafael Plata Irene","Álvaro Adolfo Piña Londoño","Álvaro César Olivera Granados",
-      "Andres Abelino Vega","Ángel Miguel Soto","Antonio Carillo","Ariel Enrique Marín Urrutia",
-      "Armando Rafael Morales Pérez","Carlos Alberto Castro Aguirre","Carlos Alberto Pumarejo López Sierra",
-      "Carlos Arturo Cáceres","Carlos Jaime Amarís","Carlos Arturo Montes","Carlos Carmona",
-      "Cristian Camilo Santiago Redondo","David Rubio","Donaldo Antonio Gamero Barrios","Eduard Cáceres Prado",
-      "Evelio Vaca Pérez","Ever Antonio Barrera Jiménez","Francisco Rafael Barraza","Fredy Antonio Naranjo Martínez",
-      "Hector Raúl Arévalo Serrano","Javier Armando Molina","Jesús María Coronel","Joaquín Felipe Contreras Romero",
-      "Joaquín Vergara Cárdenas","José Antonio Mercado Hernández","José Gregorio Vargas","José Ignacio Pacheco Suárez",
-      "José Miguel Palacios","Juan Carlos Galvis Solano","Leiner Guerrero Ayala","Leonardo Enrique Porto Egea",
-      "Luis Alberto Palomino Villar","Luis Eduardo Oñate","Luis Felipe Pavón","Luis Fernando Daza Malo",
-      "Luis Javier Molina Gutiérrez","Manuel Romero Negrete","Mario Alejandro Lozano Villada","Martín Villazón Ochoa",
-      "Nohemí Ester Pacheco Sábata","Rafael Ignacio Puerta Flores","Tania Solano Tristancho","Uriel Evangelista Arias",
-      "Victor Enrique Carpintero Manjares","Wilmar Antonio Serrano Quintero","Alberto de Jesús Aragón Aragón",
-      "Jesús Emilio Márquez Gutiérrez","Jesús Javier Suárez Caro","Isidoro de Jesús Cardona","Isaías Rueda Cardona"
+      "Saín Álvarez", "Jorge Eliécer García Claro", "Ariel Jaime Arias", "Ramiro Blanco Rubio",
+      "Miguel Ángel Carrascal Toro", "Dioselino Durán Pérez", "Guillermo Reyes Aponte", "Alejandro Chocó Cáceres",
+      "Miguel Ángel Peña Ortega", "Luis Antonio Sánchez Guerrero", "William Sarabia Jaimes", "Deiber Ramírez",
+      "Euclides García Claro", "Jair Julio Vega", "Diosemiro Chinchilla Contreras", "Jhon Jairo Contreras Vera",
+      "Pedro Jesús Bayona Rojas", "Gerardo Quintero Jaimes", "Luis Carlos Angarita", "José Néstor Rodríguez Santana",
+      "Jesús Emilio Navarro Garay", "Daniel Suárez Martínez", "Jaime Castillo Peña", "Diego Alberto Tamayo Garcera",
+      "Carlos Mauricio Nova Vega", "Rafael Plata Irene", "Álvaro Adolfo Piña Londoño", "Álvaro César Olivera Granados",
+      "Andres Abelino Vega", "Ángel Miguel Soto", "Antonio Carillo", "Ariel Enrique Marín Urrutia",
+      "Armando Rafael Morales Pérez", "Carlos Alberto Castro Aguirre", "Carlos Alberto Pumarejo López Sierra",
+      "Carlos Arturo Cáceres", "Carlos Jaime Amarís", "Carlos Arturo Montes", "Carlos Carmona",
+      "Cristian Camilo Santiago Redondo", "David Rubio", "Donaldo Antonio Gamero Barrios", "Eduard Cáceres Prado",
+      "Evelio Vaca Pérez", "Ever Antonio Barrera Jiménez", "Francisco Rafael Barraza", "Fredy Antonio Naranjo Martínez",
+      "Hector Raúl Arévalo Serrano", "Javier Armando Molina", "Jesús María Coronel", "Joaquín Felipe Contreras Romero",
+      "Joaquín Vergara Cárdenas", "José Antonio Mercado Hernández", "José Gregorio Vargas", "José Ignacio Pacheco Suárez",
+      "José Miguel Palacios", "Juan Carlos Galvis Solano", "Leiner Guerrero Ayala", "Leonardo Enrique Porto Egea",
+      "Luis Alberto Palomino Villar", "Luis Eduardo Oñate", "Luis Felipe Pavón", "Luis Fernando Daza Malo",
+      "Luis Javier Molina Gutiérrez", "Manuel Romero Negrete", "Mario Alejandro Lozano Villada", "Martín Villazón Ochoa",
+      "Nohemí Ester Pacheco Sábata", "Rafael Ignacio Puerta Flores", "Tania Solano Tristancho", "Uriel Evangelista Arias",
+      "Victor Enrique Carpintero Manjares", "Wilmar Antonio Serrano Quintero", "Alberto de Jesús Aragón Aragón",
+      "Jesús Emilio Márquez Gutiérrez", "Jesús Javier Suárez Caro", "Isidoro de Jesús Cardona", "Isaías Rueda Cardona"
     ];
 
-    // Colores para estrellas basados en las constelaciones
-    const constellationColors = [
-      "#ffffee", // Blanco cálido (default)
-      "#ffe8d6", // Crema
-      "#e6f0ff", // Azul pálido
-      "#ffe3f1", // Rosa pálido
-      "#f3ffe6"  // Verde pálido
-    ];
-
-    /******************************************************
-     * ESTRELLAS DE FONDO OPTIMIZADAS
-     ******************************************************/
-    const BACKGROUND_STAR_COUNT = 300; // Reducido para mejor rendimiento
-    let backgroundStars = [];
-    function createBackgroundStars() {
+    /***** BACKGROUND STARS *****/
+    const BACKGROUND_STAR_COUNT = 400;
+    let backgroundStarsArr = [];
+    function createBackgroundStars(){
       starfield.innerHTML = "";
-      backgroundStars = [];
-      // Crear estrellas de fondo
-      for(let i = 0; i < BACKGROUND_STAR_COUNT; i++) {
+      backgroundStarsArr = [];
+      for (let i = 0; i < BACKGROUND_STAR_COUNT; i++){
         const az = Math.random() * 360;
         const alt = (Math.asin(2 * Math.random() - 1) * 180) / Math.PI;
         const starEl = document.createElement("div");
         starEl.className = "star";
-        
-        // Tamaños variados
-        const size = Math.random() * 1.8 + 0.8;
+        const size = Math.random() * 2 + 1;
         starEl.style.width = size + "px";
         starEl.style.height = size + "px";
-        
-        // Variar la opacidad para dar más profundidad
         starEl.style.opacity = (Math.random() * 0.7 + 0.3).toFixed(2);
-        
-        // Colores variados
-        const colorRand = Math.random();
-        if (colorRand > 0.92) {
-          starEl.classList.add("gold");
-        } else if (colorRand > 0.84) {
-          starEl.classList.add("blue");
-        } else if (colorRand > 0.76) {
-          starEl.classList.add("red");
-        } else if (colorRand > 0.68) {
-          starEl.classList.add("purple");
-        }
-        
-        // Algunas estrellas brillan
-        if(Math.random() > 0.9) starEl.classList.add("bright");
-        
-        backgroundStars.push({ element: starEl, azimuth: az, altitude: alt });
+        if (Math.random() > 0.9) starEl.classList.add("bright");
+        backgroundStarsArr.push({ element: starEl, azimuth: az, altitude: alt });
         starfield.appendChild(starEl);
       }
-      
-      // Crear elementos visuales adicionales
-      createVisualEffects();
     }
 
-    function createVisualEffects() {
-      // Añadir nebulosas para efectos visuales
-      const nebulaColors = [
-        'rgba(100,150,255,0.1)', // Azul
-        'rgba(138,100,226,0.1)', // Púrpura
-        'rgba(255,130,150,0.08)', // Rosa
-        'rgba(130,200,255,0.1)'  // Azul claro
-      ];
-      
-      // Crear 3 nebulosas
-      for(let i = 0; i < 3; i++) {
-        const nebula = document.createElement('div');
-        nebula.className = 'nebula';
-        
-        const size = 300 + Math.random() * 400;
-        nebula.style.width = size + 'px';
-        nebula.style.height = size + 'px';
-        
-        nebula.style.top = Math.random() * 100 + '%';
-        nebula.style.left = Math.random() * 100 + '%';
-        
-        const colorIndex = Math.floor(Math.random() * nebulaColors.length);
-        nebula.style.background = `radial-gradient(circle, ${nebulaColors[colorIndex]}, transparent 70%)`;
-        
-        // Retardo en animación
-        nebula.style.animationDelay = (Math.random() * 5) + 's';
-        
-        starfield.appendChild(nebula);
-      }
-    }
-
-    /******************************************************
-     * ESTRELLAS DE VÍCTIMAS OPTIMIZADAS
-     ******************************************************/
+    /***** VICTIM STARS *****/
     let victimStars = [];
-    function createVictimStars() {
+    function createVictimStars(){
       victimStars = [];
-
-      // Distribución con distancia mínima
       const placedStars = [];
-      const minDistDeg = 10; // separa más las estrellas
+      const minDistDeg = 10;
       const attempts = 200;
-
-      victimNames.forEach((name, idx) => {
+      victimNames.forEach(name => {
         let placed = false;
-        for(let i = 0; i < attempts; i++) {
+        for (let i = 0; i < attempts; i++){
           let az = Math.random() * 360;
           let alt = -60 + Math.random() * 120;
           let ok = true;
-          for(let st of placedStars) {
+          for (let st of placedStars){
             let dAz = az - st.azimuth;
             let dAlt = alt - st.altitude;
             let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-            if(dist < minDistDeg) {
-              ok = false; break;
-            }
+            if (dist < minDistDeg) { ok = false; break; }
           }
-          if(ok) {
-            // Asignar un color basado en su posición (para agrupar visualmente)
-            const colorIndex = Math.floor(az / 72) % constellationColors.length;
-            const color = constellationColors[colorIndex];
-            
-            placedStars.push({ azimuth: az, altitude: alt, name, color });
-            placed = true;
-            break;
-          }
+          if (ok) { placedStars.push({ azimuth: az, altitude: alt, name }); placed = true; break; }
         }
-        if(!placed) {
-          console.log("No se pudo ubicar:", name);
-        }
+        if (!placed) { console.log("No se pudo ubicar:", name); }
       });
-
       placedStars.forEach(st => {
-        const size = 2.2 + Math.random() * 1.8; // Estrellas un poco más grandes
+        const size = 2 + Math.random() * 2;
         const bright = Math.random() < 0.3;
         victimStars.push({
           name: st.name,
@@ -698,152 +523,137 @@
           altitude: st.altitude,
           size: size,
           bright: bright,
-          color: st.color,
           connections: []
         });
       });
-
       computeConnections();
-
       victimStars.forEach(st => {
         const starEl = document.createElement("div");
         starEl.className = "star";
         starEl.style.width = st.size + "px";
         starEl.style.height = st.size + "px";
-        starEl.style.backgroundColor = st.color;
-        if(st.bright) starEl.classList.add("bright");
-
+        if (st.bright) starEl.classList.add("bright");
         const nameEl = document.createElement("div");
         nameEl.className = "star-name";
         nameEl.textContent = st.name;
-
         starfield.appendChild(starEl);
         starfield.appendChild(nameEl);
-
         st.element = starEl;
         st.nameTag = nameEl;
       });
     }
-
-    // Conecta cada estrella con las 2 más cercanas (umbral menor para constelaciones más pequeñas)
-    function computeConnections() {
-      const threshold = 20; // Menor => constelaciones más pequeñas
+    function computeConnections(){
+      const threshold = 20;
       victimStars.forEach((star, i) => {
         let distances = [];
         victimStars.forEach((other, j) => {
-          if(i === j) return;
+          if (i === j) return;
           let dAz = star.azimuth - other.azimuth;
           let dAlt = star.altitude - other.altitude;
           let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-          // Preferir conexiones entre estrellas del mismo color
-          if(star.color === other.color) {
-            dist *= 0.8; // Reducir distancia virtual para favorecer conexiones del mismo color
-          }
-          distances.push({ index: j, dist });
+          distances.push({ index: j, dist: dist });
         });
         distances.sort((a, b) => a.dist - b.dist);
-        // Limitar a 1 conexión por estrella para mejor rendimiento
-        star.connections = distances.filter(d => d.dist < threshold).slice(0, 1).map(d => d.index);
+        star.connections = distances.filter(d => d.dist < threshold).slice(0, 2).map(d => d.index);
       });
     }
 
-    /******************************************************
-     * INICIAR APP
-     ******************************************************/
-    startBtn.addEventListener("click", async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = stream;
-        await video.play();
-
-        // Permisos iOS
+    /***** REQUEST ORIENTATION PERMISSION *****/
+    async function requestOrientationPermission() {
+      if (typeof DeviceOrientationEvent !== "undefined" &&
+          typeof DeviceOrientationEvent.requestPermission === "function") {
         try {
-          if(typeof DeviceOrientationEvent !== "undefined" &&
-             typeof DeviceOrientationEvent.requestPermission === "function") {
-            const perm = await DeviceOrientationEvent.requestPermission();
-            if(perm !== "granted") throw new Error("Sensores denegados");
-          }
-          window.addEventListener("deviceorientation", handleOrientation);
-        } catch(e) {
-          console.log("Orientación error:", e);
+          const response = await DeviceOrientationEvent.requestPermission();
+          return response === "granted";
+        } catch (error) {
+          console.error("Error al solicitar permiso:", error);
+          return false;
         }
-
-        startPanel.style.display = "none";
-        controls.style.display = "flex";
-
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
-
-        createBackgroundStars();
-        createVictimStars();
-
-        appActive = true;
-
-        // Estrellas fugaces - menos frecuentes para optimizar
-        setInterval(createShootingStar, 3500);
-
-        // Calibración inicial
-        startCalibration();
-
-        // Debug con doble click
-        document.addEventListener("dblclick", toggleDebug);
-
-        requestAnimationFrame(updatePositions);
-
-      } catch(err) {
-        console.error("Error al iniciar:", err);
-        msgOverlay("Error al iniciar: " + err.message);
+      }
+      return true;
+    }
+    requestPermissionBtn.addEventListener("click", async () => {
+      const granted = await requestOrientationPermission();
+      if (granted) {
+        msgOverlay("Orientation permission granted.");
+        requestPermissionBtn.style.display = "none";
+        startBtn.disabled = false;
+      } else {
+        msgOverlay("Orientation permission denied. Clear site data in Safari and try again.");
       }
     });
 
-    /******************************************************
-     * ORIENTACIÓN
-     ******************************************************/
-    function handleOrientation(evt) {
-      if(!appActive) return;
-      let alpha;
-      if(typeof evt.webkitCompassHeading === "number") {
-        alpha = evt.webkitCompassHeading;
-      } else {
-        alpha = (360 - (evt.alpha || 0)) % 360;
+    /***** START APP *****/
+    startBtn.addEventListener("click", async () => {
+      try {
+        if (window.orientation !== 0) {
+          msgOverlay("Please use the app in vertical (portrait) mode.");
+          return;
+        }
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        video.srcObject = stream;
+        await video.play();
+        if (!window.DeviceOrientationEvent.requestPermission) {
+          window.addEventListener("deviceorientation", handleOrientation);
+        }
+        startPanel.style.display = "none";
+        controls.style.display = "flex";
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+        createBackgroundStars();
+        createVictimStars();
+        appActive = true;
+        setInterval(createShootingStar, 3000);
+        startCalibration();
+        document.addEventListener("dblclick", toggleDebug);
+        requestAnimationFrame(updatePositions);
+      } catch (err) {
+        console.error("Error starting app:", err);
+        msgOverlay("Error starting app: " + err.message);
       }
-      const altitude = (evt.beta || 0) - 90;
-      const gamma = (evt.gamma || 0);
+    });
 
+    /***** ORIENTATION HANDLER (PORTRAIT MODE) *****/
+    function handleOrientation(evt) {
+      if (!appActive) return;
+      let alpha = (evt.alpha !== null) ? (360 - evt.alpha) % 360 : 0;
+      // In portrait: use evt.beta (minus 90) for vertical, evt.gamma for horizontal.
+      let vertical = (evt.beta || 0) - 90;
+      let horizontal = evt.gamma || 0;
       deviceOrientation.alpha = alpha;
-      deviceOrientation.altitude = altitude;
-      deviceOrientation.gamma = gamma;
-
-      if(calibrating) updateCalibrationUI();
-      if(showDebug) {
+      deviceOrientation.altitude = vertical;
+      deviceOrientation.gamma = horizontal;
+      lastOrientationUpdate = Date.now();
+      if (calibrating) updateCalibrationUI();
+      if (showDebug) {
         debugEl.textContent = `
 Alpha: ${alpha.toFixed(1)}
-Alt:   ${altitude.toFixed(1)}
-Gamma: ${gamma.toFixed(1)}
+Vertical (Beta-90): ${vertical.toFixed(1)}
+Horizontal (Gamma): ${horizontal.toFixed(1)}
 Offsets => A:${calibrationOffset.alpha.toFixed(1)} Alt:${calibrationOffset.altitude.toFixed(1)}
-FPS: ${calculateFPS()}
         `;
       }
     }
 
-    // Calcular FPS para debug
-    let lastFrameTime = 0;
-    let fpsArray = [];
-    function calculateFPS() {
-      const now = performance.now();
-      const fps = 1000 / (now - lastFrameTime);
-      lastFrameTime = now;
-      
-      fpsArray.push(fps);
-      if(fpsArray.length > 10) fpsArray.shift();
-      
-      const avgFps = fpsArray.reduce((sum, val) => sum + val, 0) / fpsArray.length;
-      return avgFps.toFixed(1);
-    }
+    /***** FALLBACK: DEVICEMOTION *****/
+    window.addEventListener("devicemotion", (evt) => {
+      if (!lastMotionTimestamp) { lastMotionTimestamp = evt.timeStamp; return; }
+      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
+      lastMotionTimestamp = evt.timeStamp;
+      if (Date.now() - lastOrientationUpdate > 1000) {
+        const rr = evt.rotationRate;
+        if (rr) {
+          fallbackOrientation.alpha += (rr.alpha || 0) * dt;
+          fallbackOrientation.beta += (rr.beta || 0) * dt;
+          fallbackOrientation.gamma += (rr.gamma || 0) * dt;
+          deviceOrientation.alpha = fallbackOrientation.alpha;
+          deviceOrientation.beta = fallbackOrientation.beta;
+          deviceOrientation.gamma = fallbackOrientation.gamma;
+        }
+      }
+    });
 
-    /******************************************************
-     * CALIBRACIÓN
-     ******************************************************/
+    /***** CALIBRATION *****/
     function startCalibration() {
       calibrating = true;
       calibrationUI.style.display = "flex";
@@ -852,12 +662,12 @@ FPS: ${calculateFPS()}
     }
     function updateCalibrationUI() {
       const alt = deviceOrientation.altitude;
-      const g = deviceOrientation.gamma;
-      const rangeAlt = 60, rangeG = 60;
+      const hor = deviceOrientation.gamma;
+      const rangeAlt = 60, rangeHor = 60;
       const limitedAlt = Math.max(-rangeAlt, Math.min(rangeAlt, alt));
-      const limitedG = Math.max(-rangeG, Math.min(rangeG, g));
+      const limitedHor = Math.max(-rangeHor, Math.min(rangeHor, hor));
       const radius = 80;
-      const x = (limitedG / rangeG) * radius;
+      const x = (limitedHor / rangeHor) * radius;
       const y = -(limitedAlt / rangeAlt) * radius;
       calibrationDot.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
     }
@@ -869,274 +679,178 @@ FPS: ${calculateFPS()}
       controls.style.pointerEvents = "auto";
       calibrating = false;
       video.play();
-      calibMsg.textContent = "¡Calibración completada!";
-      setTimeout(() => calibMsg.textContent = "", 2000);
+      calibMsg.textContent = "Calibration complete!";
+      setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
 
-    /******************************************************
-     * REINICIAR
-     ******************************************************/
     calibrateBtn.addEventListener("click", startCalibration);
     resetBtn.addEventListener("click", () => {
-      if(stream) stream.getTracks().forEach(t => t.stop());
+      if (stream) { stream.getTracks().forEach(t => t.stop()); }
       window.location.reload();
     });
 
-    /******************************************************
-     * AJUSTAR CANVAS
-     ******************************************************/
     function resizeCanvas() {
       skyCanvas.width = window.innerWidth;
       skyCanvas.height = window.innerHeight;
     }
 
-    /******************************************************
-     * BUCLE DE ACTUALIZACIÓN OPTIMIZADO
-     ******************************************************/
+    /***** UPDATE LOOP *****/
     function updatePositions() {
-      if(!appActive || calibrating) {
+      if (!appActive || calibrating) {
         requestAnimationFrame(updatePositions);
         return;
       }
-
-      frameCount++;
-
-      // Limpiar canvas
       ctx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
-
-      // Estrellas de fondo - optimizado
-      backgroundStars.forEach(bs => {
-        // Actualizar posición cada 2 frames para mejorar rendimiento
-        if(frameCount % 2 === 0) {
-          const pos = calculateScreenPosition(bs.azimuth, bs.altitude);
-          if(pos.inView) {
-            bs.element.style.display = "block";
-            bs.element.style.left = pos.x + "px";
-            bs.element.style.top = pos.y + "px";
-            bs.element.style.opacity = "1";
-          } else {
-            bs.element.style.display = "none";
-          }
+      backgroundStarsArr.forEach(bs => {
+        const pos = calculateScreenPosition(bs.azimuth, bs.altitude);
+        if (pos.inView) {
+          bs.element.style.display = "block";
+          bs.element.style.left = pos.x + "px";
+          bs.element.style.top = pos.y + "px";
+          bs.element.style.opacity = "1";
+          bs.element.style.transform = "scale(1)";
+        } else {
+          bs.element.style.display = "none";
+          bs.element.style.opacity = "0";
+          bs.element.style.transform = "scale(0.5)";
         }
       });
-
-      // Víctimas
       let visibleVictims = [];
       victimStars.forEach(vs => {
         const pos = calculateScreenPosition(vs.azimuth, vs.altitude);
-        if(pos.inView) {
+        if (pos.inView) {
           vs.element.style.display = "block";
           vs.element.style.left = pos.x + "px";
           vs.element.style.top = pos.y + "px";
-
-          // Distancia al centro para mostrar nombre
+          vs.element.style.opacity = "1";
+          vs.element.style.transform = "scale(1)";
           const dx = pos.x - window.innerWidth / 2;
           const dy = pos.y - window.innerHeight / 2;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          // Transición suave de opacidad basada en la distancia
-          if(dist < 150) {
-            const opacity = Math.max(0, 1 - dist / 150).toFixed(2);
-            vs.nameTag.style.opacity = opacity;
-            vs.nameTag.style.transform = `translate(-50%, -150%) scale(${0.7 + opacity * 0.3})`;
-          } else {
-            vs.nameTag.style.opacity = "0";
-            vs.nameTag.style.transform = "translate(-50%, -150%) scale(0.7)";
-          }
-
+          vs.nameTag.style.opacity = (dist < 80) ? "1" : "0";
           vs.nameTag.style.left = pos.x + "px";
-          vs.nameTag.style.top = (pos.y - vs.size / 2 - 15) + "px";
-
+          vs.nameTag.style.top = (pos.y - vs.size / 2 - 5) + "px";
           visibleVictims.push({ data: vs, x: pos.x, y: pos.y });
         } else {
           vs.element.style.display = "none";
+          vs.element.style.opacity = "0";
+          vs.element.style.transform = "scale(0.5)";
           vs.nameTag.style.opacity = "0";
         }
       });
-
-      // Dibujar líneas con glow optimizado
-      if(visibleVictims.length > 0) {
-        ctx.save();
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.strokeStyle = "rgba(255,255,255,0.7)";
-        ctx.lineWidth = 1.2;
-        
-        // Solo aplicar shadow si no hay muchas estrellas visibles (mejora rendimiento)
-        if(visibleVictims.length < 15) {
-          ctx.shadowColor = "rgba(255,255,255,0.8)";
-          ctx.shadowBlur = 8;
-        }
-
-        // Crear conjunto para no dibujar líneas duplicadas
-        const drawnConnections = new Set();
-        
-        visibleVictims.forEach(v1 => {
-          let st = v1.data;
-          st.connections.forEach(cIdx => {
-            // Evitar conexiones duplicadas
-            const connectionKey = [Math.min(st.azimuth, victimStars[cIdx].azimuth), 
-                                  Math.max(st.azimuth, victimStars[cIdx].azimuth)].join('-');
-            if(drawnConnections.has(connectionKey)) return;
-            drawnConnections.add(connectionKey);
-            
-            let target = victimStars[cIdx];
-            let found = visibleVictims.find(v => v.data === target);
-            if(found) {
-              const dx = v1.x - found.x;
-              const dy = v1.y - found.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              // Límite de distancia más corto para rendimiento
-              if(dist < 100) {
-                // Si son del mismo color, usar ese color para la línea
-                if(st.color === target.color) {
-                  // Convertir color a rgba con transparencia
-                  const rgbColor = hexToRgba(st.color, 0.7);
-                  ctx.strokeStyle = rgbColor;
-                  if(visibleVictims.length < 15) {
-                    ctx.shadowColor = rgbColor;
-                  }
-                }
-                
-                ctx.beginPath();
-                ctx.moveTo(v1.x, v1.y);
-                ctx.lineTo(found.x, found.y);
-                ctx.stroke();
-              }
+      ctx.save();
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = "rgba(255,255,255,0.8)";
+      ctx.shadowBlur = 12;
+      visibleVictims.forEach(v1 => {
+        let st = v1.data;
+        st.connections.forEach(cIdx => {
+          let target = victimStars[cIdx];
+          let found = visibleVictims.find(v => v.data === target);
+          if (found) {
+            const dx = v1.x - found.x;
+            const dy = v1.y - found.y;
+            const screenDist = Math.sqrt(dx * dx + dy * dy);
+            if (screenDist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(v1.x, v1.y);
+              ctx.lineTo(found.x, found.y);
+              ctx.stroke();
             }
-          });
+          }
         });
-        ctx.restore();
-      }
-
-      // Estrella más cercana al centro
-      let closestStar = null; 
+      });
+      ctx.restore();
+      let closestStar = null;
       let minDist = Infinity;
-      const centerX = window.innerWidth / 2, centerY = window.innerHeight / 2;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
       visibleVictims.forEach(vv => {
         const dx = vv.x - centerX;
         const dy = vv.y - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if(dist < minDist && dist < 60) {
+        if (dist < minDist && dist < 60) {
           minDist = dist;
           closestStar = vv.data;
         }
       });
-      
-      // Actualizar panel y retícula central según si hay estrella cerca
-      if(closestStar) {
-        // Solo actualizar el panel si la estrella cambió
-        if(closestStar !== closestStarLastFrame) {
-          objectName.textContent = closestStar.name;
-          objectDesc.textContent = "Víctima de falsos positivos";
-          objectInfo.style.display = "block";
-          centerReticle.classList.add("active");
-          closestStarLastFrame = closestStar;
-        }
+      if (closestStar) {
+        objectName.textContent = closestStar.name;
+        objectDesc.textContent = "Víctima de falsos positivos";
+        objectInfo.style.display = "block";
       } else {
-        if(closestStarLastFrame !== null) {
-          objectInfo.style.display = "none";
-          centerReticle.classList.remove("active");
-          closestStarLastFrame = null;
-        }
+        objectInfo.style.display = "none";
       }
-
       requestAnimationFrame(updatePositions);
     }
 
-    // Convertir hex a rgba para líneas de colores
-    function hexToRgba(hex, alpha = 1) {
-      const r = parseInt(hex.substring(1, 3), 16);
-      const g = parseInt(hex.substring(3, 5), 16);
-      const b = parseInt(hex.substring(5, 7), 16);
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
-
-    /******************************************************
-     * CALCULAR POSICIÓN (AR)
-     ******************************************************/
+    /***** CALCULATE SCREEN POSITION *****/
     function calculateScreenPosition(azimuth, altitude) {
-      const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
-      const alt = deviceOrientation.altitude - calibrationOffset.altitude;
-      let dAz = azimuth - alpha;
-      dAz = ((dAz + 540) % 360) - 180; // -180..180
-      const dAlt = altitude - alt;
-      const fovFactor = 2.5;
-      const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
-      const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
+      const userAlpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
+      const userVertical = deviceOrientation.altitude - calibrationOffset.altitude;
+      let dAz = azimuth - userAlpha;
+      dAz = ((dAz + 540) % 360) - 180;
+      const dAlt = altitude - userVertical;
+      const fovFactorH = 2.0;  // Sensibilidad horizontal
+      const fovFactorV = 2.5;  // Sensibilidad vertical
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      // Para el eje horizontal, combinamos la diferencia de azimut con la inclinación lateral (gamma)
+      const x = centerX + ((dAz + (deviceOrientation.gamma - calibrationOffset.gamma)) / fovFactorH) * (window.innerWidth / 50);
+      const y = centerY - ((dAlt) / fovFactorV) * (window.innerHeight / 50);
       const inView = (Math.abs(dAz) < 90 && Math.abs(dAlt) < 70);
       return { x, y, inView };
     }
 
-    /******************************************************
-     * ESTRELLAS FUGACES OPTIMIZADAS
-     ******************************************************/
+    /***** SHOOTING STAR *****/
     function createShootingStar() {
-      if(!appActive || calibrating) return;
-      
+      if (!appActive || calibrating) return;
       const el = document.createElement("div");
       el.className = "shooting-star";
-      
-      const length = 70 + Math.random() * 80;
+      const length = 50 + Math.random() * 100;
       el.style.width = length + "px";
-      
       const x = Math.random() * window.innerWidth;
       const y = Math.random() * (window.innerHeight / 3);
       el.style.left = x + "px";
       el.style.top = y + "px";
-      
       const angle = ((Math.random() * 60 + 30) * Math.PI) / 180;
       el.style.transform = `rotate(${angle}rad)`;
-      
       document.body.appendChild(el);
-      
-      // Animación más simple y eficiente
       el.animate([
         { opacity: 0, transform: `rotate(${angle}rad) translateX(0)` },
-        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.5}px)` },
+        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
+        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
         { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
       ], {
-        duration: 900 + Math.random() * 800,
-        easing: "ease-out"
+        duration: 1000 + Math.random() * 1000,
+        easing: "ease-in-out"
       }).onfinish = () => el.remove();
     }
 
-    /******************************************************
-     * TOGGLE DEBUG
-     ******************************************************/
+    /***** TOGGLE DEBUG *****/
     function toggleDebug() {
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
     }
 
-    /******************************************************
-     * MENSAJE OVERLAY
-     ******************************************************/
+    /***** MSG OVERLAY *****/
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
       d.style.top = "50%";
       d.style.left = "50%";
       d.style.transform = "translate(-50%,-50%)";
-      d.style.background = "rgba(8,8,32,0.9)";
+      d.style.background = "rgba(0,0,0,0.8)";
       d.style.color = "#fff";
-      d.style.padding = "20px 30px";
-      d.style.borderRadius = "15px";
+      d.style.padding = "20px";
+      d.style.borderRadius = "10px";
       d.style.zIndex = "999";
       d.style.maxWidth = "80%";
       d.style.textAlign = "center";
-      d.style.border = "1px solid rgba(200,200,255,0.3)";
-      d.style.boxShadow = "0 0 30px rgba(0,0,0,0.5)";
-      d.style.backdropFilter = "blur(5px)";
-      d.style.fontFamily = "'Montserrat', 'Avenir', sans-serif";
       d.innerHTML = txt;
       document.body.appendChild(d);
-      setTimeout(() => { 
-        d.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-        d.style.opacity = "0";
-        d.style.transform = "translate(-50%, -60%)";
-        setTimeout(() => d.remove(), 500);
-      }, 3500);
+      setTimeout(() => { d.remove(); }, 4000);
     }
   </script>
 </body>
