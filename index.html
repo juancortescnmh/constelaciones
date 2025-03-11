@@ -2,11 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <!-- iOS Fullscreen -->
+  <!-- Permitir pantalla completa en iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
-  <title>Constelaciones AR - Calibración Mejorada</title>
+  <title>Constelaciones AR - Calibrador Premium</title>
   <style>
     /* Fuente y reset */
     @font-face {
@@ -22,7 +22,7 @@
       touch-action: none;
       height: 100vh;
     }
-    /* Fondo cósmico y video */
+    /* Video, fondo cósmico y canvas */
     #video {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -50,7 +50,7 @@
       z-index: 3;
       pointer-events: none;
     }
-    /* Estilos para estrellas y retícula central */
+    /* Estrellas y retícula central */
     .star {
       position: absolute;
       border-radius: 50%;
@@ -62,6 +62,17 @@
     }
     .star.bright {
       box-shadow: 0 0 12px 2px rgba(255,255,255,0.7);
+    }
+    .star-name {
+      position: absolute;
+      font-size: 13px;
+      color: #fff;
+      text-shadow: 0 0 4px #000, 0 0 8px #000;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -150%);
+      z-index: 4;
+      transition: opacity 0.3s ease;
     }
     .center-reticle {
       position: fixed;
@@ -86,26 +97,31 @@
       width: 100%; height: 2px;
       top: 50%; transform: translateY(-50%);
     }
-    /* Paneles (inicio, calibración, controles, sensibilidad) */
-    #startPanel, #calibrationUI, #sensibilityPanel, #orientationWarning, #objectInfo {
-      position: fixed;
-      z-index: 50;
-      background: rgba(13,27,42,0.7);
-      color: #fff;
-      font-family: 'Avenir', sans-serif;
-    }
+    /* Panel de inicio */
     #startPanel {
-      top: 0; left: 0; width: 100%; height: 100%;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
       text-align: center;
       padding: 20px;
+      z-index: 100;
       background: linear-gradient(135deg, #01010f, #2a002b);
       background-size: 400% 400%;
       animation: cosmicGradient 15s ease infinite;
     }
-    #startPanel h1 { margin-bottom: 30px; font-size: 28px; color: #fff; text-shadow: 0 2px 10px rgba(100,181,246,0.5); font-weight: 600; }
-    #startPanel p { margin-bottom: 20px; color: #eee; font-size: 16px; }
+    #startPanel h1 {
+      margin-bottom: 30px;
+      font-size: 28px;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(100,181,246,0.5);
+      font-weight: 600;
+    }
+    #startPanel p {
+      margin-bottom: 20px;
+      color: #eee;
+      font-size: 16px;
+    }
     #startPanel button {
       padding: 12px 30px;
       background: linear-gradient(135deg, #2962ff, #0039cb);
@@ -117,10 +133,12 @@
       margin: 5px;
       cursor: pointer;
     }
+    /* Panel de controles */
     #controls {
-      bottom: 20px; left: 0; width: 100%;
+      position: fixed;
+      bottom: 20px; left: 0;
+      width: 100%;
       display: flex; justify-content: center; gap: 10px;
-      pointer-events: auto;
       z-index: 10;
     }
     .btn {
@@ -134,24 +152,35 @@
       font-family: 'Avenir', sans-serif;
     }
     .btn:hover { background: rgba(40,63,83,0.8); }
+    /* Panel de calibración mejorado */
     #calibrationUI {
-      top: 0; left: 0; width: 100%; height: 100%;
-      display: none; flex-direction: column;
-      justify-content: center; align-items: center;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
       padding: 20px;
+      z-index: 150;
+      background: rgba(0,0,0,0.7);
     }
     #calibrationUI h2 { margin-bottom: 20px; font-size: 24px; font-weight: 600; }
     #calibrationUI p { margin-bottom: 30px; max-width: 80%; color: #ddd; }
     #calibrationIndicator {
       width: 200px; height: 200px;
-      border-radius: 50%; border: 2px solid #82b1ff;
-      position: relative; margin-bottom: 40px;
+      border-radius: 50%;
+      border: 2px solid #82b1ff;
+      position: relative;
+      margin-bottom: 40px;
     }
     #calibrationDot {
       width: 20px; height: 20px;
-      background-color: #2962ff; border-radius: 50%;
-      position: absolute; left: 50%; top: 50%;
+      background-color: #2962ff;
+      border-radius: 50%;
+      position: absolute;
+      left: 50%; top: 50%;
       transform: translate(-50%,-50%);
       box-shadow: 0 0 10px rgba(41,98,255,0.7);
     }
@@ -164,34 +193,48 @@
       font-size: 16px;
       cursor: pointer;
     }
-    #calibMsg { margin-top: 10px; color: #ccc; font-size: 13px; }
-    /* Advertencia de orientación */
-    #orientationWarning {
-      top: 0; left: 0; width: 100%; height: 100%;
-      display: none; flex-direction: column;
-      justify-content: center; align-items: center;
-      background: rgba(0,0,0,0.9);
-      text-align: center; padding: 20px;
-      z-index: 150;
+    #calibMsg {
+      margin-top: 10px;
+      color: #ccc;
+      font-size: 13px;
     }
-    #orientationWarning p { color: white; font-size: 18px; max-width: 80%; }
     /* Panel de sensibilidad */
     #sensibilityPanel {
+      position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
+      width: 300px;
+      background: rgba(13,27,42,0.9);
       border: 1px solid rgba(100,149,237,0.4);
       border-radius: 12px;
       padding: 20px;
-      width: 300px;
-      background: rgba(13,27,42,0.9);
       z-index: 90;
       display: none;
     }
-    #sensibilityPanel h3 { margin-bottom: 15px; color: #82b1ff; font-size: 18px; text-align: center; }
-    .slider-container { margin-bottom: 15px; }
-    .slider-container label { display: block; margin-bottom: 5px; font-size: 14px; color: #eee; }
-    .slider-container input { width: 100%; }
-    .value-display { display: flex; justify-content: space-between; font-size: 12px; color: #ccc; }
+    #sensibilityPanel h3 {
+      margin-bottom: 15px;
+      color: #82b1ff;
+      font-size: 18px;
+      text-align: center;
+    }
+    .slider-container {
+      margin-bottom: 15px;
+    }
+    .slider-container label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #eee;
+    }
+    .slider-container input {
+      width: 100%;
+    }
+    .value-display {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #ccc;
+    }
     #sensibilityPanel button {
       background: #2962ff;
       color: white;
@@ -203,6 +246,54 @@
       cursor: pointer;
     }
     #sensibilityPanel button:hover { background: #1c47a8; }
+    /* Advertencia de orientación */
+    #orientationWarning {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.9);
+      text-align: center;
+      padding: 20px;
+      z-index: 200;
+    }
+    #orientationWarning p {
+      color: white;
+      font-size: 18px;
+      max-width: 80%;
+    }
+    /* Panel de información de objeto */
+    #objectInfo {
+      position: fixed;
+      bottom: 80px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13,27,42,0.7);
+      padding: 10px 20px;
+      border-radius: 10px;
+      max-width: 80%;
+      text-align: center;
+      z-index: 100;
+      display: none;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(100,149,237,0.4);
+    }
+    /* Debug (opcional) */
+    #debug {
+      position: fixed;
+      top: 10px; left: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 10px;
+      max-width: 50%;
+      white-space: pre;
+      display: none;
+      font-family: 'Avenir', sans-serif;
+      z-index: 300;
+    }
   </style>
 </head>
 <body>
@@ -222,7 +313,7 @@
     <button id="debugToggleBtn" class="btn">Debug</button>
   </div>
   <!-- Panel de información -->
-  <div id="objectInfo" style="display: none; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; max-width: 80%; text-align: center; backdrop-filter: blur(5px); border: 1px solid rgba(100,149,237,0.4);">
+  <div id="objectInfo">
     <h3 id="objectName"></h3>
     <p id="objectDesc"></p>
   </div>
@@ -237,12 +328,12 @@
     <button id="requestPermissionBtn">Request Permissions</button>
     <button id="startBtn" disabled>Start</button>
   </div>
-  <!-- Panel de calibración mejorada -->
+  <!-- Panel de calibración mejorado -->
   <div id="calibrationUI">
     <h2>Calibración</h2>
     <p>
-      Apunta tu iPhone hacia adelante y alinea el punto azul con el centro.<br/>
-      Mantén el dispositivo quieto para tomar muestras y luego haz clic en Confirm.
+      Apunta el iPhone hacia adelante y mantén el dispositivo quieto para recopilar muestras.<br/>
+      Cuando termines, pulsa <strong>Confirm</strong>.
     </p>
     <div id="calibrationIndicator">
       <div id="calibrationDot"></div>
@@ -301,9 +392,9 @@
     <p>Por favor rota tu dispositivo a modo retrato para la mejor experiencia</p>
   </div>
   <!-- Debug info -->
-  <div id="debug" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; font-size: 10px; max-width: 50%; display: none; white-space: pre; font-family: 'Avenir', sans-serif;"></div>
+  <div id="debug"></div>
 
-  <!-- CARGA DE GYRONORM Y FULLTILT (se usa para gestionar la orientación) -->
+  <!-- Carga de GyroNorm y FULLTILT (para la gestión de la orientación) -->
   <script>
     // GyroNorm.js v2.0.6 (minificado)
     !function(a,b){"function"==typeof define&&define.amd?define(function(){return b()}):"object"==typeof exports?module.exports=b():a.GyroNorm=b()}(this,function(){function a(a){return Math.round(a*Math.pow(10,t))/Math.pow(10,t)}function b(){var b={};b=v?o.getScreenAdjustedEuler():o.getFixedFrameEuler();var c=p.getScreenAdjustedAcceleration(),e=p.getScreenAdjustedAccelerationIncludingGravity(),f=p.getScreenAdjustedRotationRate(),g=0;s===d?(g=b.alpha-k,g=0>g?360-Math.abs(g):g):g=b.alpha;var h={do:{alpha:a(g),beta:a(b.beta),gamma:a(b.gamma),absolute:o.isAbsolute()},dm:{x:a(c.x),y:a(c.y),z:a(c.z),gx:a(e.x),gy:a(e.y),gz:a(e.z),alpha:a(f.alpha||0),beta:a(f.beta||0),gamma:a(f.gamma||0)}};return r&&(h.dm.gx*=q,h.dm.gy*=q,h.dm.gz*=q),h}function c(a){u&&("string"==typeof a&&(a={message:a,code:0}),u(a))}var d="game",e="world",f="deviceorientation",g="acceleration",h="accelerationinludinggravity",i="rotationrate",j=null,k=0,l=null,m=null,n=null,o=null,p=null,q=0,r=!1,s=d,t=2,u=null,v=!1,w=function(a){};return w.GAME=d,w.WORLD=e,w.DEVICE_ORIENTATION=f,w.ACCELERATION=g,w.ACCELERATION_INCLUDING_GRAVITY=h,w.ROTATION_RATE=i,w.prototype.init=function(a){a&&a.frequency&&(l=a.frequency),a&&a.gravityNormalized&&(r=a.gravityNormalized),a&&a.orientationBase&&(s=a.orientationBase),a&&"number"==typeof a.decimalCount&&a.decimalCount>=0&&(t=a.decimalCount),a&&a.logger&&(u=a.logger),a&&a.screenAdjusted&&(v=a.screenAdjusted);var b=new FULLTILT.getDeviceOrientation({type:s}).then(function(a){o=a}),c=(new FULLTILT.getDeviceMotion).then(function(a){p=a,r&&(q=p.getScreenAdjustedAccelerationIncludingGravity().z>0?-1:1)});return Promise.all([b,c]).then(function(){n=!0})},w.prototype.end=function(){try{n=!1,this.stop(),p.stop(),o.stop()}catch(a){c(a)}},w.prototype.start=function(a){return n?(j=a,m||(o.start(),p.start(),m=setInterval(function(){j(b())},l)),!0):(c({message:'GyroNorm is not initialized yet. First call the "init()" function.',code:1}),!1)},w.prototype.stop=function(){j=null,m&&(clearInterval(m),m=null)},w.prototype.normalizeGravity=function(a){r=a,p&&(q=p.getScreenAdjustedAccelerationIncludingGravity().z>0?-1:1)},w.prototype.setHeadDirection=function(){return v||s!==d?!1:(k=o.getFixedFrameEuler().alpha,!0)},w.prototype.startLogging=function(a){a&&(u=a)},w.prototype.stopLogging=function(){u=null},w.prototype.isAvailable=function(a){var b=o.getScreenAdjustedEuler(),c=p.getScreenAdjustedAcceleration(),d=p.getScreenAdjustedAccelerationIncludingGravity(),e=p.getScreenAdjustedRotationRate();switch(a){case f:return b.alpha&&null!==b.alpha&&b.beta&&null!==b.beta&&b.gamma&&null!==b.gamma;case g:return c&&c.x&&c.y&&c.z;case h:return d&&d.x&&d.y&&d.z;case i:return e&&e.alpha&&e.beta&&e.gamma;default:return!1}},w.prototype.isRunning=function(){return null!==m},w});
@@ -483,7 +574,7 @@
   </script>
 
   <script>
-    // Variables de estado
+    // VARIABLES DE ESTADO
     let appActive = false;
     let calibrating = false;
     let stream = null;
@@ -492,25 +583,23 @@
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
     let gn = null; // Instancia de GyroNorm
 
-    // Ajustes de sensibilidad
+    // Parámetros de sensibilidad y suavizado
     let smoothingFactor = 0.7;
     let horizontalSensitivity = 1.0;
     let verticalSensitivity = 1.0;
     let invertXAxis = false;
     let invertYAxis = false;
 
-    // Variables de suavizado de orientación
+    // Variables de suavizado y orientación
     let smoothedOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let lastRawOrientation = { alpha: 0, altitude: 0, gamma: 0, mappedGamma: 0 };
-
-    // Orientación del dispositivo y offset de calibración
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
 
-    // Array para recolectar muestras durante calibración
+    // Arreglo para recolectar muestras durante calibración
     let calibrationSamples = [];
 
-    // Referencias a elementos del DOM
+    // Referencias al DOM
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
     const skyCanvas = document.getElementById("skyCanvas");
@@ -543,17 +632,18 @@
     const closeSettingsBtn = document.getElementById("closeSettingsBtn");
     const debugEl = document.getElementById("debug");
 
-    // Lista de nombres (ejemplo)
+    // Lista de nombres de ejemplo (opcional)
     const victimNames = [
       "Saín Álvarez", "Jorge Eliécer García Claro", "Ariel Jaime Arias", "Ramiro Blanco Rubio",
       "Miguel Ángel Carrascal Toro", "Dioselino Durán Pérez", "Guillermo Reyes Aponte", "Alejandro Chocó Cáceres"
     ];
 
-    // Función de inicialización
+    // INICIALIZACIÓN
     function init() {
       if (showDebug) {
         debugEl.textContent = `isIOS: ${isIOS}\nisSafari: ${isSafari}\nAgent: ${navigator.userAgent}`;
       }
+      // Si es iOS, agregar botón de debug (opcional)
       if (isIOS) {
         const debugBtn = document.createElement("button");
         debugBtn.id = "debugBtn";
@@ -575,7 +665,7 @@
       }
     }
 
-    // Configuración del panel de sensibilidad
+    // Configurar panel de sensibilidad
     function setupSensibilityPanel() {
       horizSensSlider.value = horizontalSensitivity;
       vertSensSlider.value = verticalSensitivity;
@@ -602,12 +692,12 @@
       closeSettingsBtn.addEventListener('click', function() { sensibilityPanel.style.display = 'none'; });
     }
 
-    // Mostrar/Ocultar panel de sensibilidad
+    // Toggle panel de sensibilidad
     function toggleSensibilityPanel() {
       sensibilityPanel.style.display = (sensibilityPanel.style.display === 'block') ? 'none' : 'block';
     }
 
-    // Comprobar orientación
+    // Comprobar orientación (muestra advertencia si es landscape)
     function checkOrientation() {
       const isPortrait = window.innerHeight > window.innerWidth;
       orientationWarning.style.display = isPortrait ? "none" : "flex";
@@ -640,7 +730,7 @@
       }
     }
 
-    // Función para crear estrellas de fondo (simplificada)
+    // Crear estrellas de fondo
     const BACKGROUND_STAR_COUNT = 400;
     let backgroundStarsArr = [];
     function createBackgroundStars(){
@@ -661,12 +751,11 @@
       }
     }
 
-    // (Opcional) Crear estrellas para "víctimas"
+    // (Opcional) Crear estrellas "víctimas"
     let victimStars = [];
     function createVictimStars(){
       victimStars = [];
       const placedStars = [];
-      const minDistDeg = 10;
       victimNames.forEach(name => {
         let az = Math.random() * 360;
         let alt = -60 + Math.random() * 120;
@@ -699,7 +788,7 @@
       });
     }
 
-    // Solicitar permisos (iOS requiere permiso explícito)
+    // Solicitar permisos para iOS
     async function requestPermissions() {
       try {
         if (isIOS && typeof DeviceOrientationEvent !== "undefined" &&
@@ -750,7 +839,7 @@
             createBackgroundStars();
             createVictimStars();
             appActive = true;
-            startCalibration();
+            startCalibration(); // Inicia el modo calibración automáticamente
             if (gn) {
               gn.start(function(data) {
                 processOrientationData(data.do.alpha, data.do.beta - 90, data.do.gamma);
@@ -819,7 +908,7 @@ Usando: GyroNorm
       lastOrientationUpdate = Date.now();
     }
 
-    // Handlers de orientación y movimiento para fallback
+    // Fallback para deviceorientation
     function handleOrientation(evt) {
       if (!appActive && !calibrating) return;
       let alpha, beta, gamma;
@@ -846,6 +935,7 @@ Usando: Eventos nativos
         `;
       }
     }
+    // Fallback para devicemotion
     function handleMotion(evt) {
       if (!appActive && !calibrating) return;
       if (Date.now() - lastOrientationUpdate > 1000 && (!gn || !gn.isRunning())) {
@@ -866,20 +956,22 @@ Usando: Eventos nativos
       }
     }
 
-    // Calibración mejorada
+    // CALIBRACIÓN MEJORADA
+    // Al iniciar calibración se vacía el arreglo y se recogen muestras (durante 2 segundos, por ejemplo)
     function startCalibration() {
       calibrating = true;
       calibrationUI.style.display = "flex";
       controls.style.pointerEvents = "none";
-      // Reiniciar suavizado y vaciar muestras
+      // Reiniciamos suavizado y vaciamos muestras
       smoothedOrientation = { alpha: deviceOrientation.alpha, altitude: deviceOrientation.altitude, gamma: deviceOrientation.gamma };
       calibrationSamples = [];
+      // Durante calibración, se van recolectando muestras
       updateCalibrationUI();
+      // Opcional: si deseas limitar la duración, puedes usar setTimeout para avisar al usuario
     }
     
-    // Durante calibración, recolectar muestras y actualizar la posición del punto
+    // Recolectar muestras y actualizar la posición del punto de calibración
     function updateCalibrationUI() {
-      // Muestra el punto en función de la orientación actual
       const alt = deviceOrientation.altitude;
       const hor = deviceOrientation.gamma;
       const rangeAlt = 60, rangeHor = 60;
@@ -889,11 +981,11 @@ Usando: Eventos nativos
       const x = (limitedHor / rangeHor) * radius;
       const y = -(limitedAlt / rangeAlt) * radius;
       calibrationDot.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
-      // Recolectar muestra cada vez que se actualiza (podrías agregar un retardo si fuese necesario)
+      // Agregar muestra
       calibrationSamples.push({ alpha: deviceOrientation.alpha, altitude: deviceOrientation.altitude, gamma: deviceOrientation.gamma });
     }
     
-    // Al confirmar la calibración, se promedian las muestras
+    // Al confirmar, se promedian todas las muestras para calcular el offset
     confirmCalibration.addEventListener("click", () => {
       if (calibrationSamples.length > 0) {
         let sum = calibrationSamples.reduce((acc, sample) => {
@@ -911,7 +1003,7 @@ Usando: Eventos nativos
       controls.style.pointerEvents = "auto";
       calibrating = false;
       if (video.paused) video.play();
-      calibMsg.textContent = "Calibración completa!";
+      calibMsg.textContent = "¡Calibración completa!";
       setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
     calibrateBtn.addEventListener("click", startCalibration);
@@ -928,6 +1020,7 @@ Usando: Eventos nativos
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
     }
+    // Función para calcular la posición en pantalla (AR)
     function calculateScreenPosition(azimuth, altitude) {
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
@@ -981,11 +1074,10 @@ Usando: Eventos nativos
         setTimeout(() => d.remove(), 500);
       }, 4000);
     }
-    // Variables para detección de iOS y Safari
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    // Detección de iOS y Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    // Iniciar
     document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
