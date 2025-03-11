@@ -6,46 +6,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
-  <title>Constelaciones AR</title>
-
-  <!-- Tipografía Avenir (usa Avenir si está instalada, sino fallback a sans-serif) -->
+  <title>Constelaciones AR - Calibración Mejorada</title>
   <style>
+    /* Fuente y reset */
     @font-face {
       font-family: 'Avenir';
       src: local('Avenir'), local('AvenirLTStd-Book');
     }
-  </style>
-
-  <style>
-    /* ============================
-       ANIMACIONES GLOBALES
-    ============================ */
-    @keyframes cosmicGradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes twinkle {
-      0%, 100% { opacity: 0.8; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.2); }
-    }
-    @keyframes starAppear {
-      from { opacity: 0; transform: scale(0.5); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-    @keyframes panelFadeIn {
-      0% { opacity: 0; transform: translateY(10px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes rotate {
-      0% { transform: rotate(0deg); }
-      50% { transform: rotate(90deg); }
-      100% { transform: rotate(0deg); }
-    }
-
-    /* ============================
-       RESETEO Y ESTILO BASE
-    ============================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       overflow: hidden;
@@ -55,24 +22,15 @@
       touch-action: none;
       height: 100vh;
     }
-
-    /* ============================
-       VIDEO / CÁMARA
-    ============================ */
+    /* Fondo cósmico y video */
     #video {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       object-fit: cover;
       z-index: 1;
     }
-
-    /* ============================
-       FONDO CÓSMICO
-    ============================ */
     #starfield {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 2;
       pointer-events: none;
@@ -81,68 +39,30 @@
       animation: cosmicGradient 25s ease infinite;
       opacity: 0.7;
     }
-
-    /* ============================
-       CANVAS PARA LÍNEAS
-    ============================ */
+    @keyframes cosmicGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
     #skyCanvas {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
       z-index: 3;
       pointer-events: none;
     }
-
-    /* ============================
-       ESTRELLAS (DOM)
-    ============================ */
+    /* Estilos para estrellas y retícula central */
     .star {
       position: absolute;
       border-radius: 50%;
       background-color: #fff;
       box-shadow: 0 0 2px rgba(255,255,255,0.8);
       pointer-events: none;
-      animation: starAppear 0.5s ease forwards;
       transition: opacity 0.3s ease, transform 0.3s ease;
       z-index: 4;
     }
     .star.bright {
       box-shadow: 0 0 12px 2px rgba(255,255,255,0.7);
-      animation: twinkle 2s infinite ease-in-out, starAppear 0.5s ease forwards;
     }
-
-    /* Nombres de estrellas (víctimas) */
-    .star-name {
-      position: absolute;
-      font-size: 13px;
-      font-weight: 400;
-      color: #fff;
-      pointer-events: none;
-      text-shadow: 0 0 4px #000, 0 0 8px #000;
-      opacity: 0;
-      transform: translate(-50%, -150%);
-      z-index: 4;
-      transition: opacity 0.3s ease;
-      font-family: 'Avenir', sans-serif;
-      letter-spacing: 0.3px;
-    }
-
-    /* ============================
-       ESTRELLAS FUGACES
-    ============================ */
-    .shooting-star {
-      position: absolute;
-      height: 2px;
-      background: linear-gradient(to right, rgba(255,255,255,0), #fff, rgba(255,255,255,0));
-      transform-origin: left center;
-      pointer-events: none;
-      z-index: 5;
-      box-shadow: 0 0 4px #fff;
-    }
-
-    /* ============================
-       RETÍCULA CENTRAL
-    ============================ */
     .center-reticle {
       position: fixed;
       left: 50%; top: 50%;
@@ -166,20 +86,42 @@
       width: 100%; height: 2px;
       top: 50%; transform: translateY(-50%);
     }
-  </style>
-</head>
-<body>
-
-<style>
-    /* ============================
-       CONTROLES
-    ============================ */
-    #controls {
+    /* Paneles (inicio, calibración, controles, sensibilidad) */
+    #startPanel, #calibrationUI, #sensibilityPanel, #orientationWarning, #objectInfo {
       position: fixed;
-      bottom: 20px; left: 0;
-      width: 100%; z-index: 10;
-      display: none; justify-content: center; gap: 10px;
-      animation: panelFadeIn 0.8s ease forwards;
+      z-index: 50;
+      background: rgba(13,27,42,0.7);
+      color: #fff;
+      font-family: 'Avenir', sans-serif;
+    }
+    #startPanel {
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      text-align: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #01010f, #2a002b);
+      background-size: 400% 400%;
+      animation: cosmicGradient 15s ease infinite;
+    }
+    #startPanel h1 { margin-bottom: 30px; font-size: 28px; color: #fff; text-shadow: 0 2px 10px rgba(100,181,246,0.5); font-weight: 600; }
+    #startPanel p { margin-bottom: 20px; color: #eee; font-size: 16px; }
+    #startPanel button {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #2962ff, #0039cb);
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      font-size: 18px;
+      box-shadow: 0 4px 15px rgba(41,98,255,0.4);
+      margin: 5px;
+      cursor: pointer;
+    }
+    #controls {
+      bottom: 20px; left: 0; width: 100%;
+      display: flex; justify-content: center; gap: 10px;
+      pointer-events: auto;
+      z-index: 10;
     }
     .btn {
       padding: 10px 20px;
@@ -188,131 +130,23 @@
       border: 1px solid rgba(100,149,237,0.4);
       border-radius: 20px;
       font-size: 14px;
-      backdrop-filter: blur(5px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      font-family: 'Avenir', sans-serif;
-    }
-    .btn:hover { background: rgba(40,63,83,0.8); cursor: pointer; }
-
-    /* ============================
-       PANEL DE INFORMACIÓN
-    ============================ */
-    #objectInfo {
-      position: fixed;
-      bottom: 80px; left: 50%;
-      transform: translateX(-50%);
-      background: rgba(13,27,42,0.7);
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 10px;
-      max-width: 80%;
-      text-align: center;
-      z-index: 10;
-      display: none;
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(100,149,237,0.4);
-      animation: panelFadeIn 0.8s ease forwards;
-      font-family: 'Avenir', sans-serif;
-    }
-    #objectInfo h3 {
-      margin-bottom: 5px;
-      color: #82b1ff;
-      font-size: 18px;
-      font-weight: 600;
-      letter-spacing: 0.4px;
-    }
-
-    /* ============================
-       PANEL DE INICIO
-    ============================ */
-    #startPanel {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 20px;
-      z-index: 100;
-      background: linear-gradient(135deg, #01010f, #2a002b);
-      background-size: 400% 400%;
-      animation: cosmicGradient 15s ease infinite;
-    }
-    #startPanel h1 {
-      margin-bottom: 30px;
-      font-size: 28px;
-      color: #fff;
-      text-shadow: 0 2px 10px rgba(100,181,246,0.5), 0 0 10px rgba(255,255,255,0.3);
-      animation: panelFadeIn 1s ease forwards;
-      font-weight: 600;
-      font-family: 'Avenir', sans-serif;
-    }
-    #startPanel p {
-      margin-bottom: 20px;
-      color: #eee;
-      font-size: 16px;
-      animation: panelFadeIn 1s ease forwards;
-      font-family: 'Avenir', sans-serif;
-    }
-    /* Botones en el panel de inicio */
-    #requestPermissionBtn, #startBtn, #debugBtn {
-      padding: 12px 30px;
-      background: linear-gradient(135deg, #2962ff, #0039cb);
-      color: #fff;
-      border: none;
-      border-radius: 30px;
-      font-size: 18px;
-      box-shadow: 0 4px 15px rgba(41,98,255,0.4);
-      animation: panelFadeIn 1.2s ease forwards;
-      font-family: 'Avenir', sans-serif;
-      margin: 5px;
-    }
-    #startBtn:disabled {
-      background: rgba(13,27,42,0.7);
-      cursor: not-allowed;
-    }
-    #requestPermissionBtn:hover, #startBtn:hover, #debugBtn:hover {
-      background: linear-gradient(135deg, #4591ff, #1c5cd9);
       cursor: pointer;
+      font-family: 'Avenir', sans-serif;
     }
-
-    /* ============================
-       PANEL DE CALIBRACIÓN
-    ============================ */
+    .btn:hover { background: rgba(40,63,83,0.8); }
     #calibrationUI {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 50;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: none; flex-direction: column;
+      justify-content: center; align-items: center;
       text-align: center;
       padding: 20px;
     }
-    #calibrationUI h2 {
-      margin-bottom: 20px;
-      font-size: 24px;
-      animation: panelFadeIn 0.5s ease forwards;
-      font-weight: 600;
-      font-family: 'Avenir', sans-serif;
-    }
-    #calibrationUI p {
-      margin-bottom: 30px;
-      max-width: 80%;
-      animation: panelFadeIn 0.7s ease forwards;
-      color: #ddd;
-      font-family: 'Avenir', sans-serif;
-    }
+    #calibrationUI h2 { margin-bottom: 20px; font-size: 24px; font-weight: 600; }
+    #calibrationUI p { margin-bottom: 30px; max-width: 80%; color: #ddd; }
     #calibrationIndicator {
       width: 200px; height: 200px;
       border-radius: 50%; border: 2px solid #82b1ff;
       position: relative; margin-bottom: 40px;
-      animation: panelFadeIn 0.8s ease forwards;
     }
     #calibrationDot {
       width: 20px; height: 20px;
@@ -328,108 +162,36 @@
       border: none;
       border-radius: 20px;
       font-size: 16px;
-      animation: panelFadeIn 1s ease forwards;
-      font-family: 'Avenir', sans-serif;
-    }
-    #confirmCalibration:hover {
-      background: #1c47a8;
       cursor: pointer;
     }
-    #calibMsg {
-      margin-top: 10px;
-      color: #ccc;
-      font-size: 13px;
-      transition: 0.3s ease;
-      font-family: 'Avenir', sans-serif;
-    }
-
-    /* ============================
-       DEBUG
-    ============================ */
-    #debug {
-      position: fixed;
-      top: 10px; left: 10px;
-      background: rgba(0,0,0,0.7);
-      padding: 5px;
-      border-radius: 5px;
-      font-size: 10px;
-      max-width: 50%;
-      z-index: 100;
-      display: none;
-      white-space: pre;
-      font-family: 'Avenir', sans-serif;
-    }
-    
-    /* ============================
-       ORIENTACIÓN INCORRECTA
-    ============================ */
+    #calibMsg { margin-top: 10px; color: #ccc; font-size: 13px; }
+    /* Advertencia de orientación */
     #orientationWarning {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: none; flex-direction: column;
+      justify-content: center; align-items: center;
       background: rgba(0,0,0,0.9);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      text-align: center; padding: 20px;
       z-index: 150;
-      text-align: center;
-      padding: 20px;
     }
-    #orientationWarning img {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 20px;
-    }
-    #orientationWarning p {
-      color: white;
-      font-size: 18px;
-      max-width: 80%;
-    }
-    
-    /* ============================
-       AJUSTES DE SENSIBILIDAD 
-    ============================ */
+    #orientationWarning p { color: white; font-size: 18px; max-width: 80%; }
+    /* Panel de sensibilidad */
     #sensibilityPanel {
-      position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(13,27,42,0.9);
       border: 1px solid rgba(100,149,237,0.4);
       border-radius: 12px;
       padding: 20px;
       width: 300px;
-      max-width: 90%;
+      background: rgba(13,27,42,0.9);
       z-index: 90;
       display: none;
-      backdrop-filter: blur(10px);
-      animation: panelFadeIn 0.5s ease forwards;
     }
-    #sensibilityPanel h3 {
-      margin-bottom: 15px;
-      color: #82b1ff;
-      font-size: 18px;
-      text-align: center;
-    }
-    .slider-container {
-      margin-bottom: 15px;
-    }
-    .slider-container label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #eee;
-    }
-    .slider-container input {
-      width: 100%;
-      margin-bottom: 5px;
-    }
-    .value-display {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #ccc;
-    }
+    #sensibilityPanel h3 { margin-bottom: 15px; color: #82b1ff; font-size: 18px; text-align: center; }
+    .slider-container { margin-bottom: 15px; }
+    .slider-container label { display: block; margin-bottom: 5px; font-size: 14px; color: #eee; }
+    .slider-container input { width: 100%; }
+    .value-display { display: flex; justify-content: space-between; font-size: 12px; color: #ccc; }
     #sensibilityPanel button {
       background: #2962ff;
       color: white;
@@ -440,9 +202,7 @@
       width: 100%;
       cursor: pointer;
     }
-    #sensibilityPanel button:hover {
-      background: #1c47a8;
-    }
+    #sensibilityPanel button:hover { background: #1c47a8; }
   </style>
 </head>
 <body>
@@ -462,7 +222,7 @@
     <button id="debugToggleBtn" class="btn">Debug</button>
   </div>
   <!-- Panel de información -->
-  <div id="objectInfo">
+  <div id="objectInfo" style="display: none; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; max-width: 80%; text-align: center; backdrop-filter: blur(5px); border: 1px solid rgba(100,149,237,0.4);">
     <h3 id="objectName"></h3>
     <p id="objectDesc"></p>
   </div>
@@ -470,19 +230,19 @@
   <div id="startPanel">
     <h1>Constelaciones AR</h1>
     <p>
-      Use the app in vertical mode.<br/>
-      First, click <strong>Request Permissions</strong>.<br/>
-      Then click <strong>Start</strong> to begin.
+      Usa la app en modo vertical.<br/>
+      Primero, haz clic en <strong>Request Permissions</strong>.<br/>
+      Luego haz clic en <strong>Start</strong> para comenzar.
     </p>
     <button id="requestPermissionBtn">Request Permissions</button>
     <button id="startBtn" disabled>Start</button>
   </div>
-  <!-- Panel de calibración -->
+  <!-- Panel de calibración mejorada -->
   <div id="calibrationUI">
-    <h2>Calibration</h2>
+    <h2>Calibración</h2>
     <p>
-      Point your phone straight ahead and align the blue dot at the center.<br/>
-      Then click Confirm.
+      Apunta tu iPhone hacia adelante y alinea el punto azul con el centro.<br/>
+      Mantén el dispositivo quieto para tomar muestras y luego haz clic en Confirm.
     </p>
     <div id="calibrationIndicator">
       <div id="calibrationDot"></div>
@@ -538,25 +298,21 @@
       <path d="M7 7H17"></path>
       <path d="M7 12H17"></path>
     </svg>
-    <p>Please rotate your device to portrait mode for the best experience</p>
+    <p>Por favor rota tu dispositivo a modo retrato para la mejor experiencia</p>
   </div>
   <!-- Debug info -->
-  <div id="debug"></div>
+  <div id="debug" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; font-size: 10px; max-width: 50%; display: none; white-space: pre; font-family: 'Avenir', sans-serif;"></div>
 
-
+  <!-- CARGA DE GYRONORM Y FULLTILT (se usa para gestionar la orientación) -->
   <script>
-    // GyroNorm.js v2.0.6
+    // GyroNorm.js v2.0.6 (minificado)
     !function(a,b){"function"==typeof define&&define.amd?define(function(){return b()}):"object"==typeof exports?module.exports=b():a.GyroNorm=b()}(this,function(){function a(a){return Math.round(a*Math.pow(10,t))/Math.pow(10,t)}function b(){var b={};b=v?o.getScreenAdjustedEuler():o.getFixedFrameEuler();var c=p.getScreenAdjustedAcceleration(),e=p.getScreenAdjustedAccelerationIncludingGravity(),f=p.getScreenAdjustedRotationRate(),g=0;s===d?(g=b.alpha-k,g=0>g?360-Math.abs(g):g):g=b.alpha;var h={do:{alpha:a(g),beta:a(b.beta),gamma:a(b.gamma),absolute:o.isAbsolute()},dm:{x:a(c.x),y:a(c.y),z:a(c.z),gx:a(e.x),gy:a(e.y),gz:a(e.z),alpha:a(f.alpha||0),beta:a(f.beta||0),gamma:a(f.gamma||0)}};return r&&(h.dm.gx*=q,h.dm.gy*=q,h.dm.gz*=q),h}function c(a){u&&("string"==typeof a&&(a={message:a,code:0}),u(a))}var d="game",e="world",f="deviceorientation",g="acceleration",h="accelerationinludinggravity",i="rotationrate",j=null,k=0,l=null,m=null,n=null,o=null,p=null,q=0,r=!1,s=d,t=2,u=null,v=!1,w=function(a){};return w.GAME=d,w.WORLD=e,w.DEVICE_ORIENTATION=f,w.ACCELERATION=g,w.ACCELERATION_INCLUDING_GRAVITY=h,w.ROTATION_RATE=i,w.prototype.init=function(a){a&&a.frequency&&(l=a.frequency),a&&a.gravityNormalized&&(r=a.gravityNormalized),a&&a.orientationBase&&(s=a.orientationBase),a&&"number"==typeof a.decimalCount&&a.decimalCount>=0&&(t=a.decimalCount),a&&a.logger&&(u=a.logger),a&&a.screenAdjusted&&(v=a.screenAdjusted);var b=new FULLTILT.getDeviceOrientation({type:s}).then(function(a){o=a}),c=(new FULLTILT.getDeviceMotion).then(function(a){p=a,r&&(q=p.getScreenAdjustedAccelerationIncludingGravity().z>0?-1:1)});return Promise.all([b,c]).then(function(){n=!0})},w.prototype.end=function(){try{n=!1,this.stop(),p.stop(),o.stop()}catch(a){c(a)}},w.prototype.start=function(a){return n?(j=a,m||(o.start(),p.start(),m=setInterval(function(){j(b())},l)),!0):(c({message:'GyroNorm is not initialized yet. First call the "init()" function.',code:1}),!1)},w.prototype.stop=function(){j=null,m&&(clearInterval(m),m=null)},w.prototype.normalizeGravity=function(a){r=a,p&&(q=p.getScreenAdjustedAccelerationIncludingGravity().z>0?-1:1)},w.prototype.setHeadDirection=function(){return v||s!==d?!1:(k=o.getFixedFrameEuler().alpha,!0)},w.prototype.startLogging=function(a){a&&(u=a)},w.prototype.stopLogging=function(){u=null},w.prototype.isAvailable=function(a){var b=o.getScreenAdjustedEuler(),c=p.getScreenAdjustedAcceleration(),d=p.getScreenAdjustedAccelerationIncludingGravity(),e=p.getScreenAdjustedRotationRate();switch(a){case f:return b.alpha&&null!==b.alpha&&b.beta&&null!==b.beta&&b.gamma&&null!==b.gamma;case g:return c&&c.x&&c.y&&c.z;case h:return d&&d.x&&d.y&&d.z;case i:return e&&e.alpha&&e.beta&&e.gamma;default:return!1}},w.prototype.isRunning=function(){return null!==m},w});
-
-    // FULLTILT (versión simplificada y modificada)
+    
+    // FULLTILT (versión simplificada)
     (function(window){
       var FULLTILT = {};
-
-      // Constantes para conversión
       var DEGREE_TO_RADIAN = Math.PI / 180;
       var RADIAN_TO_DEGREE = 180 / Math.PI;
-
-      // Funciones de utilidad
       var quaternionMultiply = function(a, b) {
         var w = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z;
         var x = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
@@ -564,57 +320,41 @@
         var z = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w;
         return { w: w, x: x, y: y, z: z };
       };
-
       var eulerToQuaternion = function(euler) {
         var roll = euler.gamma * DEGREE_TO_RADIAN;
         var pitch = euler.beta * DEGREE_TO_RADIAN;
         var yaw = euler.alpha * DEGREE_TO_RADIAN;
-
-        var cX = Math.cos(pitch / 2);
-        var cY = Math.cos(yaw / 2);
-        var cZ = Math.cos(roll / 2);
-        var sX = Math.sin(pitch / 2);
-        var sY = Math.sin(yaw / 2);
-        var sZ = Math.sin(roll / 2);
-
+        var cX = Math.cos(pitch / 2), cY = Math.cos(yaw / 2), cZ = Math.cos(roll / 2);
+        var sX = Math.sin(pitch / 2), sY = Math.sin(yaw / 2), sZ = Math.sin(roll / 2);
         var w = cX * cY * cZ - sX * sY * sZ;
         var x = sX * cY * cZ - cX * sY * sZ;
         var y = cX * sY * cZ + sX * cY * sZ;
         var z = cX * cY * sZ + sX * sY * cZ;
-
         return { w: w, x: x, y: y, z: z };
       };
-
       var quaternionToEuler = function(q) {
         var ysqr = q.y * q.y;
         var t0 = 2.0 * (q.w * q.x + q.y * q.z);
         var t1 = 1.0 - 2.0 * (q.x * q.x + ysqr);
         var roll = Math.atan2(t0, t1) * RADIAN_TO_DEGREE;
-
         var t2 = 2.0 * (q.w * q.y - q.z * q.x);
         t2 = t2 > 1.0 ? 1.0 : t2;
         t2 = t2 < -1.0 ? -1.0 : t2;
         var pitch = Math.asin(t2) * RADIAN_TO_DEGREE;
-
         var t3 = 2.0 * (q.w * q.z + q.x * q.y);
         var t4 = 1.0 - 2.0 * (ysqr + q.z * q.z);
         var yaw = Math.atan2(t3, t4) * RADIAN_TO_DEGREE;
-
         return { alpha: yaw, beta: pitch, gamma: roll };
       };
-
-      // Clases principales de FULLTILT
       var DeviceOrientation = function() {
         this.eulerAngles = { alpha: 0, beta: 0, gamma: 0 };
         this._isAbsolute = false;
         this._isRunning = false;
         this._handler = null;
       };
-
       DeviceOrientation.prototype = {
         start: function() {
           if (this._isRunning) return;
-          
           var self = this;
           this._handler = function(event) {
             self.eulerAngles.alpha = event.alpha || 0;
@@ -622,38 +362,23 @@
             self.eulerAngles.gamma = event.gamma || 0;
             self._isAbsolute = event.absolute || false;
           };
-          
           window.addEventListener('deviceorientation', this._handler, false);
           this._isRunning = true;
         },
-        
         stop: function() {
           if (!this._isRunning) return;
           window.removeEventListener('deviceorientation', this._handler, false);
           this._isRunning = false;
         },
-        
         getFixedFrameEuler: function() {
-          return {
-            alpha: this.eulerAngles.alpha,
-            beta: this.eulerAngles.beta,
-            gamma: this.eulerAngles.gamma
-          };
+          return { alpha: this.eulerAngles.alpha, beta: this.eulerAngles.beta, gamma: this.eulerAngles.gamma };
         },
-        
         getScreenAdjustedEuler: function() {
           var orientationAngle = window.orientation || 0;
-          var adjustedEuler = {
-            alpha: this.eulerAngles.alpha,
-            beta: this.eulerAngles.beta,
-            gamma: this.eulerAngles.gamma
-          };
-          
-          // Ajustar según la orientación de la pantalla
+          var adjustedEuler = { alpha: this.eulerAngles.alpha, beta: this.eulerAngles.beta, gamma: this.eulerAngles.gamma };
           if (orientationAngle) {
             var quaternion = eulerToQuaternion(this.eulerAngles);
             var screenQuaternion = { w: 1, x: 0, y: 0, z: 0 };
-            
             if (orientationAngle === 90) {
               screenQuaternion = { w: 0.7071, x: 0, y: 0, z: -0.7071 };
             } else if (orientationAngle === -90) {
@@ -661,19 +386,13 @@
             } else if (orientationAngle === 180) {
               screenQuaternion = { w: 0, x: 0, y: 1, z: 0 };
             }
-            
             var adjustedQuaternion = quaternionMultiply(screenQuaternion, quaternion);
             adjustedEuler = quaternionToEuler(adjustedQuaternion);
           }
-          
           return adjustedEuler;
         },
-        
-        isAbsolute: function() {
-          return this._isAbsolute;
-        }
+        isAbsolute: function() { return this._isAbsolute; }
       };
-
       var DeviceMotion = function() {
         this.acceleration = { x: 0, y: 0, z: 0 };
         this.accelerationIncludingGravity = { x: 0, y: 0, z: 0 };
@@ -681,11 +400,9 @@
         this._isRunning = false;
         this._handler = null;
       };
-
       DeviceMotion.prototype = {
         start: function() {
           if (this._isRunning) return;
-          
           var self = this;
           this._handler = function(event) {
             if (event.acceleration) {
@@ -693,38 +410,28 @@
               self.acceleration.y = event.acceleration.y || 0;
               self.acceleration.z = event.acceleration.z || 0;
             }
-            
             if (event.accelerationIncludingGravity) {
               self.accelerationIncludingGravity.x = event.accelerationIncludingGravity.x || 0;
               self.accelerationIncludingGravity.y = event.accelerationIncludingGravity.y || 0;
               self.accelerationIncludingGravity.z = event.accelerationIncludingGravity.z || 0;
             }
-            
             if (event.rotationRate) {
               self.rotationRate.alpha = event.rotationRate.alpha || 0;
               self.rotationRate.beta = event.rotationRate.beta || 0;
               self.rotationRate.gamma = event.rotationRate.gamma || 0;
             }
           };
-          
           window.addEventListener('devicemotion', this._handler, false);
           this._isRunning = true;
         },
-        
         stop: function() {
           if (!this._isRunning) return;
           window.removeEventListener('devicemotion', this._handler, false);
           this._isRunning = false;
         },
-        
         getScreenAdjustedAcceleration: function() {
           var orientationAngle = window.orientation || 0;
-          var accel = {
-            x: this.acceleration.x,
-            y: this.acceleration.y,
-            z: this.acceleration.z
-          };
-          
+          var accel = { x: this.acceleration.x, y: this.acceleration.y, z: this.acceleration.z };
           if (orientationAngle === 90) {
             accel = { x: this.acceleration.y, y: -this.acceleration.x, z: this.acceleration.z };
           } else if (orientationAngle === -90) {
@@ -732,132 +439,82 @@
           } else if (orientationAngle === 180) {
             accel = { x: -this.acceleration.x, y: -this.acceleration.y, z: this.acceleration.z };
           }
-          
           return accel;
         },
-        
         getScreenAdjustedAccelerationIncludingGravity: function() {
           var orientationAngle = window.orientation || 0;
-          var accel = {
-            x: this.accelerationIncludingGravity.x,
-            y: this.accelerationIncludingGravity.y,
-            z: this.accelerationIncludingGravity.z
-          };
-          
+          var accel = { x: this.accelerationIncludingGravity.x, y: this.accelerationIncludingGravity.y, z: this.accelerationIncludingGravity.z };
           if (orientationAngle === 90) {
-            accel = { 
-              x: this.accelerationIncludingGravity.y, 
-              y: -this.accelerationIncludingGravity.x, 
-              z: this.accelerationIncludingGravity.z 
-            };
+            accel = { x: this.accelerationIncludingGravity.y, y: -this.accelerationIncludingGravity.x, z: this.accelerationIncludingGravity.z };
           } else if (orientationAngle === -90) {
-            accel = { 
-              x: -this.accelerationIncludingGravity.y, 
-              y: this.accelerationIncludingGravity.x, 
-              z: this.accelerationIncludingGravity.z 
-            };
+            accel = { x: -this.accelerationIncludingGravity.y, y: this.accelerationIncludingGravity.x, z: this.accelerationIncludingGravity.z };
           } else if (orientationAngle === 180) {
-            accel = { 
-              x: -this.accelerationIncludingGravity.x, 
-              y: -this.accelerationIncludingGravity.y, 
-              z: this.accelerationIncludingGravity.z 
-            };
+            accel = { x: -this.accelerationIncludingGravity.x, y: -this.accelerationIncludingGravity.y, z: this.accelerationIncludingGravity.z };
           }
-          
           return accel;
         },
-        
         getScreenAdjustedRotationRate: function() {
           var orientationAngle = window.orientation || 0;
-          var rate = {
-            alpha: this.rotationRate.alpha,
-            beta: this.rotationRate.beta,
-            gamma: this.rotationRate.gamma
-          };
-          
+          var rate = { alpha: this.rotationRate.alpha, beta: this.rotationRate.beta, gamma: this.rotationRate.gamma };
           if (orientationAngle === 90) {
-            rate = { 
-              alpha: this.rotationRate.alpha, 
-              beta: this.rotationRate.gamma, 
-              gamma: -this.rotationRate.beta 
-            };
+            rate = { alpha: this.rotationRate.alpha, beta: this.rotationRate.gamma, gamma: -this.rotationRate.beta };
           } else if (orientationAngle === -90) {
-            rate = { 
-              alpha: this.rotationRate.alpha, 
-              beta: -this.rotationRate.gamma, 
-              gamma: this.rotationRate.beta 
-            };
+            rate = { alpha: this.rotationRate.alpha, beta: -this.rotationRate.gamma, gamma: this.rotationRate.beta };
           } else if (orientationAngle === 180) {
-            rate = { 
-              alpha: this.rotationRate.alpha, 
-              beta: -this.rotationRate.beta, 
-              gamma: -this.rotationRate.gamma 
-            };
+            rate = { alpha: this.rotationRate.alpha, beta: -this.rotationRate.beta, gamma: -this.rotationRate.gamma };
           }
-          
           return rate;
         }
       };
-
-      // Métodos de acceso
       FULLTILT.getDeviceOrientation = function(options) {
         return new Promise(function(resolve) {
           var instance = new DeviceOrientation();
           resolve(instance);
         });
       };
-
       FULLTILT.getDeviceMotion = function() {
         return new Promise(function(resolve) {
           var instance = new DeviceMotion();
           resolve(instance);
         });
       };
-
-      // Exportar FULLTILT al objeto global
       window.FULLTILT = FULLTILT;
     })(window);
   </script>
 
   <script>
-    // Ejecutar init() cuando el DOM esté cargado
-    document.addEventListener("DOMContentLoaded", init);
-    
-    /***** VARIABLES DE ESTADO *****/
+    // Variables de estado
     let appActive = false;
     let calibrating = false;
     let stream = null;
     let showDebug = false;
     let lastOrientationUpdate = Date.now();
-    let lastMotionTimestamp = null;
     let fallbackOrientation = { alpha: 0, beta: 0, gamma: 0 };
-    let gn = null; // GyroNorm instance
-    
-    // Ajustes de movimiento
-    let smoothingFactor = 0.7; // Nivel de suavizado (0-0.95)
-    let horizontalSensitivity = 1.0; // Sensibilidad horizontal
-    let verticalSensitivity = 1.0; // Sensibilidad vertical
-    let invertXAxis = false; // Invertir eje X para efecto panorama
-    let invertYAxis = false; // Invertir eje Y para efecto panorama
-    
-    // Valores para suavizado
+    let gn = null; // Instancia de GyroNorm
+
+    // Ajustes de sensibilidad
+    let smoothingFactor = 0.7;
+    let horizontalSensitivity = 1.0;
+    let verticalSensitivity = 1.0;
+    let invertXAxis = false;
+    let invertYAxis = false;
+
+    // Variables de suavizado de orientación
     let smoothedOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let lastRawOrientation = { alpha: 0, altitude: 0, gamma: 0, mappedGamma: 0 };
-    
-    // Propiedades de orientación del dispositivo (ahora para efecto panorama)
+
+    // Orientación del dispositivo y offset de calibración
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
-    
-    // Detección de iOS/Safari
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
+    // Array para recolectar muestras durante calibración
+    let calibrationSamples = [];
+
+    // Referencias a elementos del DOM
     const video = document.getElementById("video");
     const starfield = document.getElementById("starfield");
     const skyCanvas = document.getElementById("skyCanvas");
     const ctx = skyCanvas.getContext("2d");
-
     const startPanel = document.getElementById("startPanel");
     const requestPermissionBtn = document.getElementById("requestPermissionBtn");
     const startBtn = document.getElementById("startBtn");
@@ -866,19 +523,14 @@
     const resetBtn = document.getElementById("resetBtn");
     const debugToggleBtn = document.getElementById("debugToggleBtn");
     const sensibilityBtn = document.getElementById("sensibilityBtn");
-
     const objectInfo = document.getElementById("objectInfo");
     const objectName = document.getElementById("objectName");
     const objectDesc = document.getElementById("objectDesc");
-
     const calibrationUI = document.getElementById("calibrationUI");
     const calibrationDot = document.getElementById("calibrationDot");
     const confirmCalibration = document.getElementById("confirmCalibration");
-    const debugEl = document.getElementById("debug");
     const calibMsg = document.getElementById("calibMsg");
     const orientationWarning = document.getElementById("orientationWarning");
-    
-    // Referencias al panel de sensibilidad
     const sensibilityPanel = document.getElementById("sensibilityPanel");
     const horizSensSlider = document.getElementById("horizSensSlider");
     const vertSensSlider = document.getElementById("vertSensSlider");
@@ -889,40 +541,19 @@
     const vertSensValue = document.getElementById("vertSensValue");
     const smoothingValue = document.getElementById("smoothingValue");
     const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+    const debugEl = document.getElementById("debug");
 
-    /***** LISTA DE NOMBRES (Víctimas) *****/
+    // Lista de nombres (ejemplo)
     const victimNames = [
       "Saín Álvarez", "Jorge Eliécer García Claro", "Ariel Jaime Arias", "Ramiro Blanco Rubio",
-      "Miguel Ángel Carrascal Toro", "Dioselino Durán Pérez", "Guillermo Reyes Aponte", "Alejandro Chocó Cáceres",
-      "Miguel Ángel Peña Ortega", "Luis Antonio Sánchez Guerrero", "William Sarabia Jaimes", "Deiber Ramírez",
-      "Euclides García Claro", "Jair Julio Vega", "Diosemiro Chinchilla Contreras", "Jhon Jairo Contreras Vera",
-      "Pedro Jesús Bayona Rojas", "Gerardo Quintero Jaimes", "Luis Carlos Angarita", "José Néstor Rodríguez Santana",
-      "Jesús Emilio Navarro Garay", "Daniel Suárez Martínez", "Jaime Castillo Peña", "Diego Alberto Tamayo Garcera",
-      "Carlos Mauricio Nova Vega", "Rafael Plata Irene", "Álvaro Adolfo Piña Londoño", "Álvaro César Olivera Granados",
-      "Andres Abelino Vega", "Ángel Miguel Soto", "Antonio Carillo", "Ariel Enrique Marín Urrutia",
-      "Armando Rafael Morales Pérez", "Carlos Alberto Castro Aguirre", "Carlos Alberto Pumarejo López Sierra",
-      "Carlos Arturo Cáceres", "Carlos Jaime Amarís", "Carlos Arturo Montes", "Carlos Carmona",
-      "Cristian Camilo Santiago Redondo", "David Rubio", "Donaldo Antonio Gamero Barrios", "Eduard Cáceres Prado",
-      "Evelio Vaca Pérez", "Ever Antonio Barrera Jiménez", "Francisco Rafael Barraza", "Fredy Antonio Naranjo Martínez",
-      "Hector Raúl Arévalo Serrano", "Javier Armando Molina", "Jesús María Coronel", "Joaquín Felipe Contreras Romero",
-      "Joaquín Vergara Cárdenas", "José Antonio Mercado Hernández", "José Gregorio Vargas", "José Ignacio Pacheco Suárez",
-      "José Miguel Palacios", "Juan Carlos Galvis Solano", "Leiner Guerrero Ayala", "Leonardo Enrique Porto Egea",
-      "Luis Alberto Palomino Villar", "Luis Eduardo Oñate", "Luis Felipe Pavón", "Luis Fernando Daza Malo",
-      "Luis Javier Molina Gutiérrez", "Manuel Romero Negrete", "Mario Alejandro Lozano Villada", "Martín Villazón Ochoa",
-      "Nohemí Ester Pacheco Sábata", "Rafael Ignacio Puerta Flores", "Tania Solano Tristancho", "Uriel Evangelista Arias",
-      "Victor Enrique Carpintero Manjares", "Wilmar Antonio Serrano Quintero", "Alberto de Jesús Aragón Aragón",
-      "Jesús Emilio Márquez Gutiérrez", "Jesús Javier Suárez Caro", "Isidoro de Jesús Cardona", "Isaías Rueda Cardona"
+      "Miguel Ángel Carrascal Toro", "Dioselino Durán Pérez", "Guillermo Reyes Aponte", "Alejandro Chocó Cáceres"
     ];
 
-
-    /***** INICIALIZACIÓN *****/
+    // Función de inicialización
     function init() {
-      // Mostrar información sobre el entorno
       if (showDebug) {
         debugEl.textContent = `isIOS: ${isIOS}\nisSafari: ${isSafari}\nAgent: ${navigator.userAgent}`;
       }
-      
-      // Si es iOS, mostrar botón de debug desde el principio
       if (isIOS) {
         const debugBtn = document.createElement("button");
         debugBtn.id = "debugBtn";
@@ -930,25 +561,13 @@
         debugBtn.addEventListener("click", toggleDebug);
         startPanel.appendChild(debugBtn);
       }
-      
-      // Inicializar GyroNorm
       initGyroNorm();
-      
-      // Configurar eventos del panel de sensibilidad
       setupSensibilityPanel();
-      
-      // Comprobar orientación
       checkOrientation();
-      
-      // Configurar oyentes de eventos
       debugToggleBtn.addEventListener("click", toggleDebug);
       sensibilityBtn.addEventListener("click", toggleSensibilityPanel);
-      
-      // Si la pantalla cambia de orientación
       window.addEventListener('orientationchange', checkOrientation);
       window.addEventListener('resize', checkOrientation);
-      
-      // Para iOS, añadir gestión especial
       if (isIOS) {
         document.addEventListener('touchmove', function(e) {
           if (!calibrating) e.preventDefault();
@@ -956,107 +575,72 @@
       }
     }
 
-    /***** CONFIGURAR PANEL DE SENSIBILIDAD *****/
+    // Configuración del panel de sensibilidad
     function setupSensibilityPanel() {
-      // Inicializar valores
       horizSensSlider.value = horizontalSensitivity;
       vertSensSlider.value = verticalSensitivity;
       smoothingSlider.value = smoothingFactor;
       invertXSlider.checked = invertXAxis;
       invertYSlider.checked = invertYAxis;
-      
       horizSensValue.textContent = horizontalSensitivity.toFixed(1);
       vertSensValue.textContent = verticalSensitivity.toFixed(1);
       smoothingValue.textContent = smoothingFactor.toFixed(2);
-      
-      // Configurar eventos
       horizSensSlider.addEventListener('input', function() {
         horizontalSensitivity = parseFloat(this.value);
         horizSensValue.textContent = horizontalSensitivity.toFixed(1);
       });
-      
       vertSensSlider.addEventListener('input', function() {
         verticalSensitivity = parseFloat(this.value);
         vertSensValue.textContent = verticalSensitivity.toFixed(1);
       });
-      
       smoothingSlider.addEventListener('input', function() {
         smoothingFactor = parseFloat(this.value);
         smoothingValue.textContent = smoothingFactor.toFixed(2);
       });
-      
-      invertXSlider.addEventListener('change', function() {
-        invertXAxis = this.checked;
-      });
-      
-      invertYSlider.addEventListener('change', function() {
-        invertYAxis = this.checked;
-      });
-      
-      closeSettingsBtn.addEventListener('click', function() {
-        sensibilityPanel.style.display = 'none';
-      });
+      invertXSlider.addEventListener('change', function() { invertXAxis = this.checked; });
+      invertYSlider.addEventListener('change', function() { invertYAxis = this.checked; });
+      closeSettingsBtn.addEventListener('click', function() { sensibilityPanel.style.display = 'none'; });
     }
 
-    /***** MOSTRAR/OCULTAR PANEL DE SENSIBILIDAD *****/
+    // Mostrar/Ocultar panel de sensibilidad
     function toggleSensibilityPanel() {
-      if (sensibilityPanel.style.display === 'block') {
-        sensibilityPanel.style.display = 'none';
-      } else {
-        sensibilityPanel.style.display = 'block';
-      }
+      sensibilityPanel.style.display = (sensibilityPanel.style.display === 'block') ? 'none' : 'block';
     }
 
-    /***** COMPROBAR ORIENTACIÓN *****/
+    // Comprobar orientación
     function checkOrientation() {
       const isPortrait = window.innerHeight > window.innerWidth;
-      if (!isPortrait) {
-        orientationWarning.style.display = "flex";
-      } else {
-        orientationWarning.style.display = "none";
-        resizeCanvas();
-      }
+      orientationWarning.style.display = isPortrait ? "none" : "flex";
+      if (isPortrait) resizeCanvas();
     }
 
-    /***** INICIALIZACIÓN DE GYRONORM *****/
+    // Inicializar GyroNorm
     function initGyroNorm() {
       try {
         gn = new GyroNorm();
-        
-        var args = {
-          frequency: 33,             // Frecuencia de callback (Hz)
-          gravityNormalized: true,   // Aceleración normalizada (de -1 a 1)
-          orientationBase: GyroNorm.GAME, // Base de orientación
-          decimalCount: 2,           // Número de decimales
-          logger: function(data) {   // Función logger para depuración
-            console.log(data);
-          },
-          screenAdjusted: true       // Ajuste automático a orientación de pantalla
+        const args = {
+          frequency: 33,
+          gravityNormalized: true,
+          orientationBase: GyroNorm.GAME,
+          decimalCount: 2,
+          logger: function(data) { console.log(data); },
+          screenAdjusted: true
         };
-
         gn.init(args).then(function() {
-          console.log("GyroNorm initialized successfully");
-          if (showDebug) {
-            debugEl.textContent += "\nGyroNorm iniciado correctamente";
-          }
+          console.log("GyroNorm iniciado correctamente");
         }).catch(function(e) {
-          console.error("GyroNorm init error", e);
-          if (showDebug) {
-            debugEl.textContent += "\nError al iniciar GyroNorm: " + e;
-          }
-          // Fallback a la implementación original
+          console.error("Error al iniciar GyroNorm", e);
           window.addEventListener("deviceorientation", handleOrientation, true);
           window.addEventListener("devicemotion", handleMotion, true);
         });
       } catch (e) {
-        console.error("Error creating GyroNorm instance", e);
-        // Fallback a la implementación original
+        console.error("Error creando instancia de GyroNorm", e);
         window.addEventListener("deviceorientation", handleOrientation, true);
         window.addEventListener("devicemotion", handleMotion, true);
       }
     }
 
-    /***** ESTRELLAS DE FONDO *****/
+    // Función para crear estrellas de fondo (simplificada)
     const BACKGROUND_STAR_COUNT = 400;
     let backgroundStarsArr = [];
     function createBackgroundStars(){
@@ -1077,42 +661,28 @@
       }
     }
 
-    /***** ESTRELLAS DE VÍCTIMAS *****/
+    // (Opcional) Crear estrellas para "víctimas"
     let victimStars = [];
     function createVictimStars(){
       victimStars = [];
       const placedStars = [];
       const minDistDeg = 10;
-      const attempts = 200;
       victimNames.forEach(name => {
-        let placed = false;
-        for (let i = 0; i < attempts; i++){
-          let az = Math.random() * 360;
-          let alt = -60 + Math.random() * 120;
-          let ok = true;
-          for (let st of placedStars){
-            let dAz = az - st.azimuth;
-            let dAlt = alt - st.altitude;
-            let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-            if (dist < minDistDeg){ ok = false; break; }
-          }
-          if (ok){ placedStars.push({ azimuth: az, altitude: alt, name }); placed = true; break; }
-        }
-        if (!placed) { console.log("No se pudo ubicar:", name); }
+        let az = Math.random() * 360;
+        let alt = -60 + Math.random() * 120;
+        placedStars.push({ azimuth: az, altitude: alt, name });
       });
       placedStars.forEach(st => {
         const size = 2 + Math.random() * 2;
-        const bright = Math.random() < 0.3;
         victimStars.push({
           name: st.name,
           azimuth: st.azimuth,
           altitude: st.altitude,
           size: size,
-          bright: bright,
+          bright: Math.random() < 0.3,
           connections: []
         });
       });
-      computeConnections();
       victimStars.forEach(st => {
         const starEl = document.createElement("div");
         starEl.className = "star";
@@ -1128,80 +698,50 @@
         st.nameTag = nameEl;
       });
     }
-    function computeConnections(){
-      const threshold = 20;
-      victimStars.forEach((star, i) => {
-        let distances = [];
-        victimStars.forEach((other, j) => {
-          if (i === j) return;
-          let dAz = star.azimuth - other.azimuth;
-          let dAlt = star.altitude - other.altitude;
-          let dist = Math.sqrt(dAz * dAz + dAlt * dAlt);
-          distances.push({ index: j, dist: dist });
-        });
-        distances.sort((a, b) => a.dist - b.dist);
-        star.connections = distances.filter(d => d.dist < threshold).slice(0, 2).map(d => d.index);
-      });
-    }
 
-    /***** SOLICITAR PERMISOS *****/
+    // Solicitar permisos (iOS requiere permiso explícito)
     async function requestPermissions() {
       try {
-        // 1. Solicitar permiso de orientación para iOS
         if (isIOS && typeof DeviceOrientationEvent !== "undefined" &&
             typeof DeviceOrientationEvent.requestPermission === "function") {
           const orientationResponse = await DeviceOrientationEvent.requestPermission();
           if (orientationResponse !== "granted") {
-            msgOverlay("Orientation permission denied. Please enable it in Settings > Safari > Motion & Orientation Access");
+            msgOverlay("Permiso de orientación denegado. Actívalo en Ajustes > Safari > Motion & Orientation Access");
             return false;
           }
         }
-        
-        // 2. Solicitar permiso de movimiento para iOS (para accelerómetro)
         if (isIOS && typeof DeviceMotionEvent !== "undefined" &&
             typeof DeviceMotionEvent.requestPermission === "function") {
           const motionResponse = await DeviceMotionEvent.requestPermission();
           if (motionResponse !== "granted") {
-            msgOverlay("Motion permission denied. Some features may not work correctly");
+            msgOverlay("Permiso de movimiento denegado. Algunas funciones pueden fallar.");
           }
         }
-        
-        // 3. Configurar event listeners
         initGyroNorm();
-        
-        msgOverlay("Permissions granted");
+        msgOverlay("Permisos concedidos");
         requestPermissionBtn.style.display = "none";
         startBtn.disabled = false;
         return true;
       } catch (error) {
-        console.error("Error requesting permissions:", error);
-        msgOverlay("Error requesting permissions: " + error.message);
+        console.error("Error solicitando permisos:", error);
+        msgOverlay("Error solicitando permisos: " + error.message);
         return false;
       }
     }
     requestPermissionBtn.addEventListener("click", requestPermissions);
 
-    /***** INICIAR APLICACIÓN *****/
+    // Iniciar la aplicación
     startBtn.addEventListener("click", async () => {
       try {
         checkOrientation();
         if (orientationWarning.style.display === "flex") {
-          msgOverlay("Please rotate your device to portrait mode first");
+          msgOverlay("Rota tu dispositivo a modo retrato");
           return;
         }
-        
-        // Obtener acceso a la cámara
         stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { 
-            facingMode: "environment",
-            width: { ideal: window.innerWidth },
-            height: { ideal: window.innerHeight }
-          } 
+          video: { facingMode: "environment", width: { ideal: window.innerWidth }, height: { ideal: window.innerHeight } } 
         });
-        
         video.srcObject = stream;
-        
-        // En iOS, necesitamos esperar explícitamente a que el video esté listo
         video.onloadedmetadata = function() {
           video.play().then(() => {
             startPanel.style.display = "none";
@@ -1210,173 +750,115 @@
             createBackgroundStars();
             createVictimStars();
             appActive = true;
-            setInterval(createShootingStar, 3000);
             startCalibration();
-            
-            // Si GyroNorm está funcionando correctamente, usarlo
             if (gn) {
               gn.start(function(data) {
-                // Procesar datos de GyroNorm con suavizado
                 processOrientationData(data.do.alpha, data.do.beta - 90, data.do.gamma);
-                
+                if (calibrating) updateCalibrationUI();
                 if (showDebug) {
                   debugEl.textContent = `
-                    Alpha: ${deviceOrientation.alpha.toFixed(1)}°
-                    Altitude: ${deviceOrientation.altitude.toFixed(1)}°
-                    Gamma: ${deviceOrientation.gamma.toFixed(1)}°
-                    Sens H: ${horizontalSensitivity.toFixed(1)} V: ${verticalSensitivity.toFixed(1)}
-                    Smooth: ${smoothingFactor.toFixed(2)}
-                    InvertX: ${invertXAxis ? "Sí" : "No"} InvertY: ${invertYAxis ? "Sí" : "No"}
-                    Offsets => A:${calibrationOffset.alpha.toFixed(1)}° Alt:${calibrationOffset.altitude.toFixed(1)}°
-                    Using: GyroNorm
+Alpha: ${deviceOrientation.alpha.toFixed(1)}°
+Altitud: ${deviceOrientation.altitude.toFixed(1)}°
+Gamma: ${deviceOrientation.gamma.toFixed(1)}°
+Sens H: ${horizontalSensitivity.toFixed(1)}  V: ${verticalSensitivity.toFixed(1)}
+Suavizado: ${smoothingFactor.toFixed(2)}
+Offsets => A: ${calibrationOffset.alpha.toFixed(1)}° Alt: ${calibrationOffset.altitude.toFixed(1)}°
+Usando: GyroNorm
                   `;
                 }
-                
-                if (calibrating) updateCalibrationUI();
               });
             }
-            
             requestAnimationFrame(updatePositions);
           }).catch(err => {
-            console.error("Error playing video:", err);
-            msgOverlay("Error starting camera: " + err.message);
+            console.error("Error al reproducir video:", err);
+            msgOverlay("Error iniciando cámara: " + err.message);
           });
         };
-        
       } catch (err) {
-        console.error("Error starting app:", err);
-        msgOverlay("Error starting app: " + err.message);
+        console.error("Error iniciando app:", err);
+        msgOverlay("Error iniciando app: " + err.message);
       }
     });
 
-    /***** PROCESAR DATOS DE ORIENTACIÓN *****/
+    // Procesar datos de orientación
     function processOrientationData(alpha, altitude, gamma) {
-      // MAPEO MANUAL DE GAMMA - Limitamos el rango de gamma y lo mapeamos a un valor más utilizable
       const gammaClamped = Math.max(-40, Math.min(40, gamma));
-      const gammaMapped = (gammaClamped / 40) * 30; // Mapear a un rango de -30 a 30 grados
-      
-      // Calcular las diferencias para aplicar la sensibilidad
+      const gammaMapped = (gammaClamped / 40) * 30;
       const alphaDiff = ((alpha - lastRawOrientation.alpha + 540) % 360) - 180;
       const altitudeDiff = altitude - lastRawOrientation.altitude;
       const gammaDiff = gammaMapped - lastRawOrientation.mappedGamma;
-      
-      // Aplicar factores de sensibilidad e inversión para efecto panorama
       const dirX = invertXAxis ? -1 : 1;
       const dirY = invertYAxis ? -1 : 1;
-      
-      // Invertir los signos para el efecto panorama (panorama = -1, seguimiento normal = 1)
-      const modeX = -1; // Para panorama 360, movemos en dirección opuesta a la cámara
-      const modeY = -1; // Para panorama 360, movemos en dirección opuesta a la cámara
-      
+      const modeX = -1;
+      const modeY = -1;
       const adjustedAlpha = lastRawOrientation.alpha + (alphaDiff * horizontalSensitivity * dirX * modeX);
       const adjustedAltitude = lastRawOrientation.altitude + (altitudeDiff * verticalSensitivity * dirY * modeY);
       const adjustedGamma = lastRawOrientation.mappedGamma + (gammaDiff * horizontalSensitivity * dirX * modeX);
-      
-      // Guardar los valores actuales como los anteriores para la próxima iteración
       lastRawOrientation.alpha = alpha;
       lastRawOrientation.altitude = altitude;
       lastRawOrientation.gamma = gamma;
       lastRawOrientation.mappedGamma = gammaMapped;
-      
-      // Aplicar suavizado
       if (smoothingFactor > 0) {
-        // Inicializar valores suavizados si es la primera vez
         if (smoothedOrientation.alpha === 0) {
           smoothedOrientation.alpha = adjustedAlpha;
           smoothedOrientation.altitude = adjustedAltitude;
           smoothedOrientation.gamma = adjustedGamma;
         } else {
-          // Aplicar suavizado exponencial
           smoothedOrientation.alpha = smoothedOrientation.alpha * smoothingFactor + adjustedAlpha * (1 - smoothingFactor);
           smoothedOrientation.altitude = smoothedOrientation.altitude * smoothingFactor + adjustedAltitude * (1 - smoothingFactor);
           smoothedOrientation.gamma = smoothedOrientation.gamma * smoothingFactor + adjustedGamma * (1 - smoothingFactor);
         }
-        
-        // Actualizar la orientación del dispositivo con valores suavizados
         deviceOrientation.alpha = smoothedOrientation.alpha;
         deviceOrientation.altitude = smoothedOrientation.altitude;
         deviceOrientation.gamma = smoothedOrientation.gamma;
       } else {
-        // Sin suavizado, usar valores ajustados directamente
         deviceOrientation.alpha = adjustedAlpha;
         deviceOrientation.altitude = adjustedAltitude;
         deviceOrientation.gamma = adjustedGamma;
       }
-      
       lastOrientationUpdate = Date.now();
     }
 
-    /***** HANDLERS DE ORIENTACIÓN Y MOVIMIENTO (FALLBACK) *****/
+    // Handlers de orientación y movimiento para fallback
     function handleOrientation(evt) {
       if (!appActive && !calibrating) return;
-      
-      // Obtener valores de orientación según plataforma
       let alpha, beta, gamma;
-      
       if (isIOS) {
-        // En iOS, los ángulos pueden necesitar ajustes específicos
         alpha = evt.alpha || 0;
         beta = evt.beta || 0;
         gamma = evt.gamma || 0;
-        
-        // Si la pantalla está en modo portrait
         if (window.orientation === 0 || window.orientation === 180) {
           processOrientationData((360 - alpha) % 360, beta - 90, gamma);
-        } 
-        // Si la pantalla está en landscape
-        else {
+        } else {
           const adjustedGamma = window.orientation === 90 ? gamma : -gamma;
           processOrientationData((360 - alpha) % 360, adjustedGamma, window.orientation === 90 ? beta : -beta);
         }
       } else {
-        // Para dispositivos Android y otros
         processOrientationData((360 - (evt.alpha || 0)) % 360, (evt.beta || 0) - 90, evt.gamma || 0);
       }
-      
       if (calibrating) updateCalibrationUI();
-      
       if (showDebug) {
         debugEl.textContent = `
-          Alpha: ${deviceOrientation.alpha.toFixed(1)}°
-          Altitude: ${deviceOrientation.altitude.toFixed(1)}°
-          Gamma: ${deviceOrientation.gamma.toFixed(1)}°
-          Sens H: ${horizontalSensitivity.toFixed(1)} V: ${verticalSensitivity.toFixed(1)}
-          Smooth: ${smoothingFactor.toFixed(2)}
-          InvertX: ${invertXAxis ? "Sí" : "No"} InvertY: ${invertYAxis ? "Sí" : "No"}
-          Device: ${isIOS ? 'iOS' : 'Android/Other'}
-          Using: Native events
+Alpha: ${deviceOrientation.alpha.toFixed(1)}°
+Altitud: ${deviceOrientation.altitude.toFixed(1)}°
+Gamma: ${deviceOrientation.gamma.toFixed(1)}°
+Usando: Eventos nativos
         `;
       }
     }
-
-    /***** MANEJO DE MOVIMIENTO (PARA FALLBACK) *****/
     function handleMotion(evt) {
       if (!appActive && !calibrating) return;
-      
-      if (!lastMotionTimestamp) { 
-        lastMotionTimestamp = evt.timeStamp; 
-        return; 
-      }
-      
-      const dt = (evt.timeStamp - lastMotionTimestamp) / 1000;
-      lastMotionTimestamp = evt.timeStamp;
-      
-      // Solo usar devicemotion si no tenemos datos de orientación recientes y no estamos usando GyroNorm
       if (Date.now() - lastOrientationUpdate > 1000 && (!gn || !gn.isRunning())) {
         const rr = evt.rotationRate;
         if (rr) {
-          // Actualizar orientación fallback con datos de rotation rate
-          fallbackOrientation.alpha = (fallbackOrientation.alpha + (rr.alpha || 0) * dt) % 360;
-          fallbackOrientation.beta = Math.max(-180, Math.min(180, fallbackOrientation.beta + (rr.beta || 0) * dt));
-          fallbackOrientation.gamma = Math.max(-90, Math.min(90, fallbackOrientation.gamma + (rr.gamma || 0) * dt));
-          
-          // Aplicar a orientación del dispositivo a través de la función de procesamiento
+          fallbackOrientation.alpha = (fallbackOrientation.alpha + (rr.alpha || 0) * (evt.timeStamp/1000)) % 360;
+          fallbackOrientation.beta = Math.max(-180, Math.min(180, fallbackOrientation.beta + (rr.beta || 0) * (evt.timeStamp/1000)));
+          fallbackOrientation.gamma = Math.max(-90, Math.min(90, fallbackOrientation.gamma + (rr.gamma || 0) * (evt.timeStamp/1000)));
           processOrientationData(
             fallbackOrientation.alpha,
             fallbackOrientation.beta - 90,
             fallbackOrientation.gamma
           );
-          
           if (showDebug) {
             debugEl.textContent += "\n[FALLBACK] Usando datos de acelerómetro";
           }
@@ -1384,23 +866,20 @@
       }
     }
 
-    /***** CALIBRACIÓN *****/
+    // Calibración mejorada
     function startCalibration() {
       calibrating = true;
       calibrationUI.style.display = "flex";
       controls.style.pointerEvents = "none";
-      
-      // Reiniciar valores de suavizado para calibración más precisa
-      smoothedOrientation = { 
-        alpha: deviceOrientation.alpha, 
-        altitude: deviceOrientation.altitude, 
-        gamma: deviceOrientation.gamma 
-      };
-      
+      // Reiniciar suavizado y vaciar muestras
+      smoothedOrientation = { alpha: deviceOrientation.alpha, altitude: deviceOrientation.altitude, gamma: deviceOrientation.gamma };
+      calibrationSamples = [];
       updateCalibrationUI();
     }
     
+    // Durante calibración, recolectar muestras y actualizar la posición del punto
     function updateCalibrationUI() {
+      // Muestra el punto en función de la orientación actual
       const alt = deviceOrientation.altitude;
       const hor = deviceOrientation.gamma;
       const rangeAlt = 60, rangeHor = 60;
@@ -1410,91 +889,57 @@
       const x = (limitedHor / rangeHor) * radius;
       const y = -(limitedAlt / rangeAlt) * radius;
       calibrationDot.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+      // Recolectar muestra cada vez que se actualiza (podrías agregar un retardo si fuese necesario)
+      calibrationSamples.push({ alpha: deviceOrientation.alpha, altitude: deviceOrientation.altitude, gamma: deviceOrientation.gamma });
     }
     
+    // Al confirmar la calibración, se promedian las muestras
     confirmCalibration.addEventListener("click", () => {
-      calibrationOffset.alpha = deviceOrientation.alpha;
-      calibrationOffset.altitude = deviceOrientation.altitude;
-      calibrationOffset.gamma = deviceOrientation.gamma;
+      if (calibrationSamples.length > 0) {
+        let sum = calibrationSamples.reduce((acc, sample) => {
+          return {
+            alpha: acc.alpha + sample.alpha,
+            altitude: acc.altitude + sample.altitude,
+            gamma: acc.gamma + sample.gamma
+          };
+        }, { alpha: 0, altitude: 0, gamma: 0 });
+        calibrationOffset.alpha = sum.alpha / calibrationSamples.length;
+        calibrationOffset.altitude = sum.altitude / calibrationSamples.length;
+        calibrationOffset.gamma = sum.gamma / calibrationSamples.length;
+      }
       calibrationUI.style.display = "none";
       controls.style.pointerEvents = "auto";
       calibrating = false;
       if (video.paused) video.play();
-      calibMsg.textContent = "Calibration complete!";
+      calibMsg.textContent = "Calibración completa!";
       setTimeout(() => { calibMsg.textContent = ""; }, 2000);
     });
-
     calibrateBtn.addEventListener("click", startCalibration);
-    
     resetBtn.addEventListener("click", () => {
-      if (gn && gn.isRunning()) {
-        gn.stop();
-      }
-      if (stream) { 
-        stream.getTracks().forEach(t => t.stop()); 
-      }
+      if (gn && gn.isRunning()) gn.stop();
+      if (stream) stream.getTracks().forEach(t => t.stop());
       window.location.reload();
     });
-
     function resizeCanvas() {
       skyCanvas.width = window.innerWidth;
       skyCanvas.height = window.innerHeight;
     }
-
-    /***** TOGGLE DEBUG *****/
     function toggleDebug() {
       showDebug = !showDebug;
       debugEl.style.display = showDebug ? "block" : "none";
-      
-      if (showDebug && gn) {
-        debugEl.textContent = `
-          GyroNorm disponible: ${gn ? "Sí" : "No"}
-          GyroNorm funcionando: ${(gn && gn.isRunning()) ? "Sí" : "No"}
-          isIOS: ${isIOS}
-          isSafari: ${isSafari}
-          Orientación: ${window.orientation || 'undefined'}
-          Sensibilidad H: ${horizontalSensitivity.toFixed(1)}
-          Sensibilidad V: ${verticalSensitivity.toFixed(1)}
-          Suavizado: ${smoothingFactor.toFixed(2)}
-          InvertX: ${invertXAxis ? "Sí" : "No"} InvertY: ${invertYAxis ? "Sí" : "No"}
-          User Agent: ${navigator.userAgent.substring(0, 50)}...
-        `;
-      }
     }
-
-    /***** CALCULAR POSICIÓN (AR) - MODIFICADO PARA PANORAMA 360 *****/
     function calculateScreenPosition(azimuth, altitude) {
-      // Para efecto panorama, restamos el offset de calibración
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
-      const gamma = deviceOrientation.gamma - calibrationOffset.gamma;
-      
-      // Calcula diferencia de azimuth con mejor manejo de ángulos
       let dAz = azimuth - alpha;
-      // Normaliza a rango -180 a 180
       dAz = ((dAz + 540) % 360) - 180;
-      
       const dAlt = altitude - alt;
-      
-      // Ajusta el factor FOV para mejor experiencia
       const fovFactor = isIOS ? 2.2 : 2.7;
-      
-      // Aquí está la clave del efecto panorama:
-      // Ahora gamma no afecta a la posición horizontal, solo usamos el valor de dAz
-      // Para modo panorama, ignoramos gamma, y solo usamos la diferencia relativa al centro visual
-      const gammaFactor = 0.0; // Reducimos a 0 para desconectar gamma del movimiento horizontal
-      
-      // Calcula posición en pantalla para efecto de panorama
-      const x = window.innerWidth / 2 + ((dAz + gamma * gammaFactor) / fovFactor) * (window.innerWidth / 50);
+      const x = window.innerWidth / 2 + (dAz / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
-      
-      // Ampliamos el campo de visión para ver más estrellas
       const inView = (Math.abs(dAz) < 120 && Math.abs(dAlt) < 100);
-      
       return { x, y, inView };
     }
-
-    /***** UPDATE LOOP *****/
     function updatePositions() {
       if (!appActive || calibrating) {
         requestAnimationFrame(updatePositions);
@@ -1511,110 +956,10 @@
           bs.element.style.transform = "scale(1)";
         } else {
           bs.element.style.display = "none";
-          bs.element.style.opacity = "0";
-          bs.element.style.transform = "scale(0.5)";
         }
       });
-      let visibleVictims = [];
-      victimStars.forEach(vs => {
-        const pos = calculateScreenPosition(vs.azimuth, vs.altitude);
-        if (pos.inView) {
-          vs.element.style.display = "block";
-          vs.element.style.left = pos.x + "px";
-          vs.element.style.top = pos.y + "px";
-          vs.element.style.opacity = "1";
-          vs.element.style.transform = "scale(1)";
-          const dx = pos.x - window.innerWidth / 2;
-          const dy = pos.y - window.innerHeight / 2;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          vs.nameTag.style.opacity = (dist < 80) ? "1" : "0";
-          vs.nameTag.style.left = pos.x + "px";
-          vs.nameTag.style.top = (pos.y - vs.size / 2 - 5) + "px";
-          visibleVictims.push({ data: vs, x: pos.x, y: pos.y });
-        } else {
-          vs.element.style.display = "none";
-          vs.element.style.opacity = "0";
-          vs.element.style.transform = "scale(0.5)";
-          vs.nameTag.style.opacity = "0";
-        }
-      });
-      ctx.save();
-      ctx.strokeStyle = "rgba(255,255,255,0.7)";
-      ctx.lineWidth = 1.2;
-      ctx.shadowColor = "rgba(255,255,255,0.8)";
-      ctx.shadowBlur = 12;
-      visibleVictims.forEach(v1 => {
-        let st = v1.data;
-        st.connections.forEach(cIdx => {
-          let target = victimStars[cIdx];
-          let found = visibleVictims.find(v => v.data === target);
-          if (found) {
-            const dx = v1.x - found.x;
-            const dy = v1.y - found.y;
-            const screenDist = Math.sqrt(dx * dx + dy * dy);
-            if (screenDist < 120) {
-              ctx.beginPath();
-              ctx.moveTo(v1.x, v1.y);
-              ctx.lineTo(found.x, found.y);
-              ctx.stroke();
-            }
-          }
-        });
-      });
-      ctx.restore();
-      let closestStar = null;
-      let minDist = Infinity;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      visibleVictims.forEach(vv => {
-        const dx = vv.x - centerX;
-        const dy = vv.y - centerY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < minDist && dist < 60) {
-          minDist = dist;
-          closestStar = vv.data;
-        }
-      });
-      if (closestStar) {
-        objectName.textContent = closestStar.name;
-        objectDesc.textContent = "Víctima de falsos positivos";
-        objectInfo.style.display = "block";
-      } else {
-        objectInfo.style.display = "none";
-      }
       requestAnimationFrame(updatePositions);
     }
-
-/***** ESTRELLAS FUGACES *****/
-    function createShootingStar() {
-      if (!appActive || calibrating) return;
-      const el = document.createElement("div");
-      el.className = "shooting-star";
-      const length = 50 + Math.random() * 100;
-      el.style.width = length + "px";
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * (window.innerHeight / 3);
-      el.style.left = x + "px";
-      el.style.top = y + "px";
-      const angle = ((Math.random() * 60 + 30) * Math.PI) / 180;
-      el.style.transform = `rotate(${angle}rad)`;
-      document.body.appendChild(el);
-      
-      // Usar el Web Animation API que es compatible con iOS
-      const anim = el.animate([
-        { opacity: 0, transform: `rotate(${angle}rad) translateX(0)` },
-        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.3}px)` },
-        { opacity: 1, transform: `rotate(${angle}rad) translateX(${length * 0.7}px)` },
-        { opacity: 0, transform: `rotate(${angle}rad) translateX(${length}px)` }
-      ], { 
-        duration: 1000 + Math.random() * 1000, 
-        easing: "ease-in-out" 
-      });
-      
-      anim.onfinish = () => el.remove();
-    }
-
-    /***** MENSAJE OVERLAY *****/
     function msgOverlay(txt) {
       const d = document.createElement("div");
       d.style.position = "fixed";
@@ -1636,6 +981,12 @@
         setTimeout(() => d.remove(), 500);
       }, 4000);
     }
+    // Variables para detección de iOS y Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    // Iniciar
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
