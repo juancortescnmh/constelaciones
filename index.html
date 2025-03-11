@@ -92,14 +92,7 @@
       z-index: 3;
       pointer-events: none;
     }
-  </style>
-</head>
-<body>
-  <!-- Scripts de GyroNorm serán incluidos en la parte 2 -->
 
-
-
-  <style>
     /* ============================
        ESTRELLAS (DOM)
     ============================ */
@@ -173,7 +166,11 @@
       width: 100%; height: 2px;
       top: 50%; transform: translateY(-50%);
     }
+  </style>
+</head>
+<body>
 
+<style>
     /* ============================
        CONTROLES
     ============================ */
@@ -523,6 +520,14 @@
         <span>Máximo</span>
       </div>
     </div>
+    <div class="slider-container">
+      <label for="invertXSlider">Invertir Eje X:</label>
+      <input type="checkbox" id="invertXSlider">
+    </div>
+    <div class="slider-container">
+      <label for="invertYSlider">Invertir Eje Y:</label>
+      <input type="checkbox" id="invertYSlider">
+    </div>
     <button id="closeSettingsBtn">Guardar Cambios</button>
   </div>
   <!-- Advertencia de orientación -->
@@ -832,12 +837,14 @@
     let smoothingFactor = 0.7; // Nivel de suavizado (0-0.95)
     let horizontalSensitivity = 1.0; // Sensibilidad horizontal
     let verticalSensitivity = 1.0; // Sensibilidad vertical
+    let invertXAxis = false; // Invertir eje X para efecto panorama
+    let invertYAxis = false; // Invertir eje Y para efecto panorama
     
     // Valores para suavizado
     let smoothedOrientation = { alpha: 0, altitude: 0, gamma: 0 };
-    let lastRawOrientation = { alpha: 0, altitude: 0, gamma: 0 };
+    let lastRawOrientation = { alpha: 0, altitude: 0, gamma: 0, mappedGamma: 0 };
     
-    // Propiedades de orientación del dispositivo
+    // Propiedades de orientación del dispositivo (ahora para efecto panorama)
     let deviceOrientation = { alpha: 0, altitude: 0, gamma: 0 };
     let calibrationOffset = { alpha: 0, altitude: 0, gamma: 0 };
     
@@ -876,6 +883,8 @@
     const horizSensSlider = document.getElementById("horizSensSlider");
     const vertSensSlider = document.getElementById("vertSensSlider");
     const smoothingSlider = document.getElementById("smoothingSlider");
+    const invertXSlider = document.getElementById("invertXSlider");
+    const invertYSlider = document.getElementById("invertYSlider");
     const horizSensValue = document.getElementById("horizSensValue");
     const vertSensValue = document.getElementById("vertSensValue");
     const smoothingValue = document.getElementById("smoothingValue");
@@ -953,6 +962,8 @@
       horizSensSlider.value = horizontalSensitivity;
       vertSensSlider.value = verticalSensitivity;
       smoothingSlider.value = smoothingFactor;
+      invertXSlider.checked = invertXAxis;
+      invertYSlider.checked = invertYAxis;
       
       horizSensValue.textContent = horizontalSensitivity.toFixed(1);
       vertSensValue.textContent = verticalSensitivity.toFixed(1);
@@ -972,6 +983,14 @@
       smoothingSlider.addEventListener('input', function() {
         smoothingFactor = parseFloat(this.value);
         smoothingValue.textContent = smoothingFactor.toFixed(2);
+      });
+      
+      invertXSlider.addEventListener('change', function() {
+        invertXAxis = this.checked;
+      });
+      
+      invertYSlider.addEventListener('change', function() {
+        invertYAxis = this.checked;
       });
       
       closeSettingsBtn.addEventListener('click', function() {
@@ -1207,6 +1226,7 @@
                     Gamma: ${deviceOrientation.gamma.toFixed(1)}°
                     Sens H: ${horizontalSensitivity.toFixed(1)} V: ${verticalSensitivity.toFixed(1)}
                     Smooth: ${smoothingFactor.toFixed(2)}
+                    InvertX: ${invertXAxis ? "Sí" : "No"} InvertY: ${invertYAxis ? "Sí" : "No"}
                     Offsets => A:${calibrationOffset.alpha.toFixed(1)}° Alt:${calibrationOffset.altitude.toFixed(1)}°
                     Using: GyroNorm
                   `;
@@ -1231,20 +1251,32 @@
 
     /***** PROCESAR DATOS DE ORIENTACIÓN *****/
     function processOrientationData(alpha, altitude, gamma) {
-      // Ajustar con sensibilidad configurada
+      // MAPEO MANUAL DE GAMMA - Limitamos el rango de gamma y lo mapeamos a un valor más utilizable
+      const gammaClamped = Math.max(-40, Math.min(40, gamma));
+      const gammaMapped = (gammaClamped / 40) * 30; // Mapear a un rango de -30 a 30 grados
+      
+      // Calcular las diferencias para aplicar la sensibilidad
       const alphaDiff = ((alpha - lastRawOrientation.alpha + 540) % 360) - 180;
       const altitudeDiff = altitude - lastRawOrientation.altitude;
-      const gammaDiff = gamma - lastRawOrientation.gamma;
+      const gammaDiff = gammaMapped - lastRawOrientation.mappedGamma;
       
-      // Aplicar factores de sensibilidad
-      const adjustedAlpha = lastRawOrientation.alpha + alphaDiff * horizontalSensitivity;
-      const adjustedAltitude = lastRawOrientation.altitude + altitudeDiff * verticalSensitivity;
-      const adjustedGamma = lastRawOrientation.gamma + gammaDiff * horizontalSensitivity;
+      // Aplicar factores de sensibilidad e inversión para efecto panorama
+      const dirX = invertXAxis ? -1 : 1;
+      const dirY = invertYAxis ? -1 : 1;
+      
+      // Invertir los signos para el efecto panorama (panorama = -1, seguimiento normal = 1)
+      const modeX = -1; // Para panorama 360, movemos en dirección opuesta a la cámara
+      const modeY = -1; // Para panorama 360, movemos en dirección opuesta a la cámara
+      
+      const adjustedAlpha = lastRawOrientation.alpha + (alphaDiff * horizontalSensitivity * dirX * modeX);
+      const adjustedAltitude = lastRawOrientation.altitude + (altitudeDiff * verticalSensitivity * dirY * modeY);
+      const adjustedGamma = lastRawOrientation.mappedGamma + (gammaDiff * horizontalSensitivity * dirX * modeX);
       
       // Guardar los valores actuales como los anteriores para la próxima iteración
       lastRawOrientation.alpha = alpha;
       lastRawOrientation.altitude = altitude;
       lastRawOrientation.gamma = gamma;
+      lastRawOrientation.mappedGamma = gammaMapped;
       
       // Aplicar suavizado
       if (smoothingFactor > 0) {
@@ -1310,7 +1342,7 @@
           Gamma: ${deviceOrientation.gamma.toFixed(1)}°
           Sens H: ${horizontalSensitivity.toFixed(1)} V: ${verticalSensitivity.toFixed(1)}
           Smooth: ${smoothingFactor.toFixed(2)}
-          Offsets => A:${calibrationOffset.alpha.toFixed(1)}° Alt:${calibrationOffset.altitude.toFixed(1)}°
+          InvertX: ${invertXAxis ? "Sí" : "No"} InvertY: ${invertYAxis ? "Sí" : "No"}
           Device: ${isIOS ? 'iOS' : 'Android/Other'}
           Using: Native events
         `;
@@ -1424,13 +1456,15 @@
           Sensibilidad H: ${horizontalSensitivity.toFixed(1)}
           Sensibilidad V: ${verticalSensitivity.toFixed(1)}
           Suavizado: ${smoothingFactor.toFixed(2)}
+          InvertX: ${invertXAxis ? "Sí" : "No"} InvertY: ${invertYAxis ? "Sí" : "No"}
           User Agent: ${navigator.userAgent.substring(0, 50)}...
         `;
       }
     }
 
-    /***** CALCULAR POSICIÓN (AR) *****/
+    /***** CALCULAR POSICIÓN (AR) - MODIFICADO PARA PANORAMA 360 *****/
     function calculateScreenPosition(azimuth, altitude) {
+      // Para efecto panorama, restamos el offset de calibración
       const alpha = (deviceOrientation.alpha - calibrationOffset.alpha + 360) % 360;
       const alt = deviceOrientation.altitude - calibrationOffset.altitude;
       const gamma = deviceOrientation.gamma - calibrationOffset.gamma;
@@ -1445,12 +1479,17 @@
       // Ajusta el factor FOV para mejor experiencia
       const fovFactor = isIOS ? 2.2 : 2.7;
       
-      // Calcula posición en pantalla con corrección de inclinación (gamma)
-      const x = window.innerWidth / 2 + ((dAz + gamma * 0.5) / fovFactor) * (window.innerWidth / 50);
+      // Aquí está la clave del efecto panorama:
+      // Ahora gamma no afecta a la posición horizontal, solo usamos el valor de dAz
+      // Para modo panorama, ignoramos gamma, y solo usamos la diferencia relativa al centro visual
+      const gammaFactor = 0.0; // Reducimos a 0 para desconectar gamma del movimiento horizontal
+      
+      // Calcula posición en pantalla para efecto de panorama
+      const x = window.innerWidth / 2 + ((dAz + gamma * gammaFactor) / fovFactor) * (window.innerWidth / 50);
       const y = window.innerHeight / 2 - (dAlt / fovFactor) * (window.innerHeight / 50);
       
-      // Define cuándo un elemento está en el campo de visión
-      const inView = (Math.abs(dAz) < 100 && Math.abs(dAlt) < 80);
+      // Ampliamos el campo de visión para ver más estrellas
+      const inView = (Math.abs(dAz) < 120 && Math.abs(dAlt) < 100);
       
       return { x, y, inView };
     }
@@ -1546,7 +1585,7 @@
       requestAnimationFrame(updatePositions);
     }
 
-    /***** ESTRELLAS FUGACES *****/
+/***** ESTRELLAS FUGACES *****/
     function createShootingStar() {
       if (!appActive || calibrating) return;
       const el = document.createElement("div");
@@ -1595,10 +1634,8 @@
         d.style.opacity = "0";
         d.style.transition = "opacity 0.5s ease";
         setTimeout(() => d.remove(), 500);
-        }, 4000);
+      }, 4000);
     }
   </script>
 </body>
 </html>
-
-
